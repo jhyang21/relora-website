@@ -5,7 +5,6 @@ import { MemoryCardStack } from "@/components/MemoryCardStack";
 import { SiteNav } from "@/components/SiteNav";
 import { SmoothScrollLink } from "@/components/SmoothScrollLink";
 import { WaitlistFlow } from "@/components/WaitlistFlow";
-import { showUnderConstructionPages } from "@/lib/underConstruction";
 
 const howItWorks = [
   {
@@ -35,8 +34,6 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
-  const showPages = showUnderConstructionPages();
-
   return (
     <div className="min-h-screen">
       <SiteNav current="home" />
@@ -135,16 +132,12 @@ export default function HomePage() {
               <a className="hover:text-[var(--color-ink)]" href="https://www.linkedin.com/in/junhyeok-andrew-yang/" target="_blank" rel="noreferrer">
                 LinkedIn
               </a>
-              {showPages ? (
-                <>
-                  <a className="hover:text-[var(--color-ink)]" href="/privacy">
-                    Privacy
-                  </a>
-                  <a className="hover:text-[var(--color-ink)]" href="/terms">
-                    Terms
-                  </a>
-                </>
-              ) : null}
+                <a className="hover:text-[var(--color-ink)]" href="/privacy">
+                Privacy
+              </a>
+              <a className="hover:text-[var(--color-ink)]" href="/terms">
+                Terms
+              </a>
             </div>
           </div>
         </footer>

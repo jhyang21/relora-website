@@ -13,7 +13,7 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Relora | Personal relationship memory app",
+  title: "Relora",
   description: "Join the Relora waitlist and remember the small details that build relationships.",
   metadataBase: new URL("https://andrewyangpersonal.vercel.app"),
   openGraph: {

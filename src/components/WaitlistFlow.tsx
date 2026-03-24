@@ -211,7 +211,6 @@ export function WaitlistFlow({ compact = false }: WaitlistFlowProps) {
 
       {step === 1 ? (
         <form onSubmit={handleEmailContinue} className="space-y-3">
-          <p className="text-sm uppercase tracking-[0.12em] text-[var(--color-secondary)]">Frictionless entry</p>
           <h3 className="font-serif text-2xl text-[var(--color-ink)]">Enter your email to get early access.</h3>
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
             <input
@@ -235,8 +234,7 @@ export function WaitlistFlow({ compact = false }: WaitlistFlowProps) {
 
       {step === 2 ? (
         <form onSubmit={handleIdentityContinue}>
-          <p className="text-sm uppercase tracking-[0.12em] text-[var(--color-secondary)]">Identity</p>
-          <h3 className="mt-1 font-serif text-2xl text-[var(--color-ink)]">What best describes you?</h3>
+          <h3 className="font-serif text-2xl text-[var(--color-ink)]">What best describes you?</h3>
           <div className="mt-4 grid gap-3" role="radiogroup" aria-label="Identity options">
             {identityOptions.map((option) => (
               <button
@@ -295,8 +293,7 @@ export function WaitlistFlow({ compact = false }: WaitlistFlowProps) {
 
       {step === 3 ? (
         <section>
-          <p className="text-sm uppercase tracking-[0.12em] text-[var(--color-secondary)]">Emotional hook</p>
-          <h3 className="mt-1 font-serif text-2xl text-[var(--color-ink)]">
+          <h3 className="font-serif text-2xl text-[var(--color-ink)]">
             Be honest, how often do you forget small details about people?
           </h3>
           <div className="mt-4 grid gap-3">
@@ -319,7 +316,6 @@ export function WaitlistFlow({ compact = false }: WaitlistFlowProps) {
 
       {step === 4 ? (
         <form onSubmit={handleGoldInsightContinue} className="space-y-3">
-          <p className="text-sm uppercase tracking-[0.12em] text-[var(--color-secondary)]">Gold insight</p>
           <h3 className="font-serif text-2xl text-[var(--color-ink)]">
             What&apos;s one detail you forgot recently that you wish you had remembered?
           </h3>
@@ -342,8 +338,7 @@ export function WaitlistFlow({ compact = false }: WaitlistFlowProps) {
 
       {step === 5 ? (
         <section>
-          <p className="text-sm uppercase tracking-[0.12em] text-[var(--color-secondary)]">Feature signal</p>
-          <h3 className="mt-1 font-serif text-2xl text-[var(--color-ink)]">
+          <h3 className="font-serif text-2xl text-[var(--color-ink)]">
             What would make this valuable for you? (Pick up to 2)
           </h3>
           <div className="mt-4 grid gap-3">
@@ -384,8 +379,7 @@ export function WaitlistFlow({ compact = false }: WaitlistFlowProps) {
 
       {step === 6 ? (
         <section>
-          <p className="text-sm uppercase tracking-[0.12em] text-[var(--color-secondary)]">Commitment</p>
-          <h3 className="mt-1 font-serif text-2xl text-[var(--color-ink)]">Want early beta access?</h3>
+          <h3 className="font-serif text-2xl text-[var(--color-ink)]">Want early beta access?</h3>
           <div className="mt-4 grid gap-3">
             {commitmentOptions.map((option) => (
               <button
