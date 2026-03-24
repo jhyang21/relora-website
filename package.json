@@ -10,7 +10,12 @@
     "test:api:waitlist": "node scripts/test-waitlist-api.mjs",
     "test:api:waitlist:basic": "node scripts/test-waitlist-api.mjs --basic",
     "test:api:waitlist:identity-other": "node scripts/test-waitlist-api.mjs --identity-other",
-    "test:api:waitlist:rate-limit": "node scripts/test-waitlist-api.mjs --rate-limit"
+    "test:api:waitlist:rate-limit": "node scripts/test-waitlist-api.mjs --rate-limit",
+    "test:api:request-data": "node scripts/test-request-data-api.mjs",
+    "test:api:request-data:basic": "node scripts/test-request-data-api.mjs --basic",
+    "test:api:request-data:validation": "node scripts/test-request-data-api.mjs --validation",
+    "test:api:request-data:rate-limit": "node scripts/test-request-data-api.mjs --rate-limit",
+    "test:api:request-data:honeypot": "node scripts/test-request-data-api.mjs --honeypot"
   },
   "dependencies": {
     "next": "16.1.6",
