@@ -29,7 +29,7 @@ const useCases = [
 ];
 
 export const metadata: Metadata = {
-  title: "Relora waitlist",
+  title: "Relora",
   description: "Remember the small details that build relationships.",
 };
 
