@@ -18,7 +18,7 @@
     "test:api:request-data:honeypot": "node scripts/test-request-data-api.mjs --honeypot"
   },
   "dependencies": {
-    "next": "16.1.6",
+    "next": "16.2.1",
     "postgres": "^3.4.8",
     "react": "19.2.3",
     "react-dom": "19.2.3"
@@ -28,9 +28,12 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
-    "eslint-config-next": "16.1.6",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "16.2.1",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "overrides": {
+    "flatted": "3.4.2"
   }
 }

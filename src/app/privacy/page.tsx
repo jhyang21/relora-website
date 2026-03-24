@@ -62,7 +62,7 @@ export default function PrivacyPage() {
             ["#policyupdates", "Do We Make Updates To This Notice?"],
             ["#contact", "How Can You Contact Us About This Notice?"],
             ["#request", "How Can You Review, Update, Or Delete The Data We Collect From You?"],
-          ].map(([href, label], i) => (
+          ].map(([href, label]) => (
             <li key={href}>
               <a className="text-[var(--color-primary)] underline hover:text-[var(--color-primary-hover)]" href={href}>
                 {label}
