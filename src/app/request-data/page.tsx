@@ -5,7 +5,7 @@ import { DataRequestForm } from "@/components/DataRequestForm";
 export const metadata: Metadata = {
   title: "Data Request — Relora",
   description:
-    "Exercise your privacy rights. Request access to, correction of, deletion of, or opt-out from processing of your personal data.",
+    "Exercise your privacy rights. Request access to, correction of, or deletion of your personal data or account.",
 };
 
 export default function RequestDataPage() {
@@ -17,8 +17,8 @@ export default function RequestDataPage() {
         <p className="mt-2 text-sm text-[var(--color-muted)]">We respond within 45 days.</p>
         <p className="mt-6 leading-7 text-[var(--color-ink)]">
           Under the California Consumer Privacy Act (CCPA), US state privacy laws, and Canadian
-          privacy law (PIPEDA), you have the right to access, correct, delete, or opt out of the
-          processing of your personal data. Submit your request below, or email us directly at{" "}
+          privacy law (PIPEDA), you have the right to access, correct, or delete your personal data
+          or account. Submit your request below, or email us directly at{" "}
           <a
             href="mailto:contact@immform.com"
             className="text-[var(--color-primary)] underline hover:text-[var(--color-primary-hover)]"

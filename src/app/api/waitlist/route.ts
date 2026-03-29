@@ -1,4 +1,5 @@
 import postgres, { type Sql } from "postgres";
+import { Resend } from "resend";
 import { NextResponse } from "next/server";
 import {
   COMMITMENT_OPTIONS,
@@ -15,6 +16,8 @@ const RATE_LIMIT_WINDOW_SECONDS = 10 * 60;
 const RATE_LIMIT_MAX_REQUESTS_PER_IP = 20;
 const RATE_LIMIT_MAX_REQUESTS_PER_EMAIL = 5;
 const RATE_LIMIT_PRUNE_AGE_SECONDS = RATE_LIMIT_WINDOW_SECONDS * 2;
+const NOTIFY_EMAIL = "andrew@immform.com";
+
 let sqlClient: Sql | null = null;
 let schemaReadyPromise: Promise<void> | null = null;
 
@@ -200,6 +203,37 @@ async function hitRateLimit(sql: Sql, key: string, maxRequests: number) {
   };
 }
 
+async function notifyWaitlistSignup(params: {
+  email: string;
+  identity: string;
+  emotionalHook: string;
+  goldInsight: string;
+  featureSignals: string[];
+  commitment: string;
+}) {
+  if (!process.env.RESEND_API_KEY) {
+    return;
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  await resend.emails.send({
+    from: "Relora <notifications@reloraapp.com>",
+    to: NOTIFY_EMAIL,
+    subject: `New waitlist signup: ${params.email}`,
+    text: [
+      `New waitlist signup on reloraapp.com`,
+      ``,
+      `Email: ${params.email}`,
+      `Identity: ${params.identity}`,
+      `Emotional hook: ${params.emotionalHook}`,
+      `Gold insight: ${params.goldInsight}`,
+      `Features: ${params.featureSignals.join(", ")}`,
+      `Commitment: ${params.commitment}`,
+    ].join("\n"),
+  });
+}
+
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as Record<string, unknown>;
@@ -324,6 +358,12 @@ export async function POST(request: Request) {
     `;
 
     if (insertedSignup) {
+      try {
+        await notifyWaitlistSignup({ email, identity, emotionalHook, goldInsight, featureSignals, commitment });
+      } catch {
+        // Best-effort — don't fail the signup.
+      }
+
       return NextResponse.json(
         { ok: true, code: "created", message: "Thanks for joining the waitlist." },
         { status: 200 },
