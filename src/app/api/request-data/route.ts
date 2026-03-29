@@ -1,4 +1,5 @@
 import postgres, { type Sql } from "postgres";
+import { Resend } from "resend";
 import { NextResponse } from "next/server";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -9,6 +10,15 @@ const RATE_LIMIT_MAX_REQUESTS_PER_IP = 10;
 const RATE_LIMIT_MAX_REQUESTS_PER_EMAIL = 3;
 const RATE_LIMIT_PRUNE_AGE_SECONDS = RATE_LIMIT_WINDOW_SECONDS * 2;
 const VALID_REQUEST_TYPES = new Set(["access", "correction", "deletion", "account_deletion", "opt_out"]);
+const NOTIFY_EMAIL = "andrew@immform.com";
+
+const REQUEST_TYPE_LABELS: Record<string, string> = {
+  access: "Access my data",
+  correction: "Correct my data",
+  deletion: "Delete my data",
+  account_deletion: "Delete my account",
+  opt_out: "Opt out of data processing",
+};
 
 let sqlClient: Sql | null = null;
 let schemaReadyPromise: Promise<void> | null = null;
@@ -133,6 +143,38 @@ async function hitRateLimit(sql: Sql, key: string, maxRequests: number) {
   };
 }
 
+async function notifyNewRequest(params: {
+  email: string;
+  requestType: string;
+  name: string;
+  details: string;
+}) {
+  if (!process.env.RESEND_API_KEY) {
+    return;
+  }
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
+  const label = REQUEST_TYPE_LABELS[params.requestType] ?? params.requestType;
+
+  await resend.emails.send({
+    from: "Relora <notifications@reloraapp.com>",
+    to: NOTIFY_EMAIL,
+    subject: `Data request: ${label}`,
+    text: [
+      `New data request submitted on reloraapp.com/request-data`,
+      ``,
+      `Type: ${label}`,
+      `Email: ${params.email}`,
+      params.name ? `Name: ${params.name}` : null,
+      params.details ? `Details: ${params.details}` : null,
+      ``,
+      `Review pending requests in the data_requests table.`,
+    ]
+      .filter((line) => line !== null)
+      .join("\n"),
+  });
+}
+
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as Record<string, unknown>;
@@ -207,6 +249,12 @@ export async function POST(request: Request) {
         ${details || null}
       )
     `;
+
+    try {
+      await notifyNewRequest({ email, requestType, name, details });
+    } catch {
+      // Email notification is best-effort — don't fail the user's request.
+    }
 
     return NextResponse.json(
       { ok: true, code: "submitted", message: "Your request has been received. We will respond within 45 days." },
