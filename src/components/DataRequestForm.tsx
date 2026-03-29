@@ -8,6 +8,7 @@ const REQUEST_TYPES = [
   { label: "Access my data", value: "access" },
   { label: "Correct my data", value: "correction" },
   { label: "Delete my data", value: "deletion" },
+  { label: "Delete my account", value: "account_deletion" },
   { label: "Opt out of data processing", value: "opt_out" },
 ] as const;
 
