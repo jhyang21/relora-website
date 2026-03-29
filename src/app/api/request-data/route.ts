@@ -8,7 +8,7 @@ const RATE_LIMIT_WINDOW_SECONDS = 60 * 60;
 const RATE_LIMIT_MAX_REQUESTS_PER_IP = 10;
 const RATE_LIMIT_MAX_REQUESTS_PER_EMAIL = 3;
 const RATE_LIMIT_PRUNE_AGE_SECONDS = RATE_LIMIT_WINDOW_SECONDS * 2;
-const VALID_REQUEST_TYPES = new Set(["access", "correction", "deletion", "opt_out"]);
+const VALID_REQUEST_TYPES = new Set(["access", "correction", "deletion", "account_deletion", "opt_out"]);
 
 let sqlClient: Sql | null = null;
 let schemaReadyPromise: Promise<void> | null = null;
