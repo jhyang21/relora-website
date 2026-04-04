@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import type { FormEvent, JSX } from "react";
+import { useState } from "react";
 
 type SubmitState = "idle" | "submitting" | "success" | "error";
 
@@ -14,11 +15,11 @@ const REQUEST_TYPES = [
 
 const MAX_DETAILS_LENGTH = 500;
 
-function isValidEmail(email: string) {
+function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
-export function DataRequestForm() {
+export function DataRequestForm(): JSX.Element {
   const [email, setEmail] = useState("");
   const [requestType, setRequestType] = useState("");
   const [name, setName] = useState("");
@@ -118,7 +119,6 @@ export function DataRequestForm() {
           aria-hidden="true"
         />
 
-        {/* Email */}
         <div className="space-y-2">
           <label
             htmlFor="email"
@@ -132,12 +132,11 @@ export function DataRequestForm() {
             required
             placeholder="you@example.com"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(event) => setEmail(event.target.value)}
             className="w-full rounded-full border border-[var(--color-border-warm)] bg-[var(--color-paper)] px-4 py-3 text-[var(--color-ink)] placeholder:text-[var(--color-muted)]"
           />
         </div>
 
-        {/* Request type */}
         <div className="space-y-3">
           <p className="text-xs uppercase tracking-[0.12em] text-[var(--color-secondary)]">
             Request type
@@ -165,7 +164,6 @@ export function DataRequestForm() {
           </div>
         </div>
 
-        {/* Name (optional) */}
         <div className="space-y-2">
           <label
             htmlFor="name"
@@ -180,12 +178,11 @@ export function DataRequestForm() {
             maxLength={120}
             placeholder="Your name"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(event) => setName(event.target.value)}
             className="w-full rounded-2xl border border-[var(--color-border-warm)] bg-[var(--color-paper)] px-4 py-3 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-muted)]"
           />
         </div>
 
-        {/* Details (optional) */}
         <div className="space-y-2">
           <label
             htmlFor="details"
@@ -200,7 +197,7 @@ export function DataRequestForm() {
             maxLength={MAX_DETAILS_LENGTH}
             placeholder="e.g. I would like to correct my email address on file."
             value={details}
-            onChange={(e) => setDetails(e.target.value)}
+            onChange={(event) => setDetails(event.target.value)}
             className="w-full rounded-2xl border border-[var(--color-border-warm)] bg-[var(--color-paper)] px-4 py-3 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-muted)]"
           />
           <p className="text-xs text-[var(--color-muted)]">
@@ -208,7 +205,6 @@ export function DataRequestForm() {
           </p>
         </div>
 
-        {/* Submit */}
         <div>
           <button
             type="submit"

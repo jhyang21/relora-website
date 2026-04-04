@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { JSX } from "react";
 import { SiteNav } from "@/components/SiteNav";
 
 export const metadata: Metadata = {
@@ -6,7 +7,7 @@ export const metadata: Metadata = {
   description: "Relora privacy policy. Learn how we collect, use, and protect your personal information.",
 };
 
-export default function PrivacyPage() {
+export default function PrivacyPage(): JSX.Element {
   return (
     <div className="min-h-screen">
       <SiteNav current="home" />

@@ -1,12 +1,13 @@
-import Link from "next/link";
+import type { JSX } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { showUnderConstructionPages } from "@/lib/underConstruction";
 
 type SiteNavProps = {
   current?: "home" | "about";
 };
 
-export function SiteNav({ current = "home" }: SiteNavProps) {
+export function SiteNav({ current = "home" }: SiteNavProps): JSX.Element {
   const linkClass =
     "inline-flex min-h-11 items-center text-sm font-medium text-[var(--color-muted)] transition-colors hover:text-[var(--color-ink)]";
   const showPages = showUnderConstructionPages();

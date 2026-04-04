@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { JSX } from "react";
 import { SiteNav } from "@/components/SiteNav";
 
 export const metadata: Metadata = {
@@ -6,7 +7,7 @@ export const metadata: Metadata = {
   description: "Relora terms of use. Read the terms and conditions for using Relora.",
 };
 
-export default function TermsPage() {
+export default function TermsPage(): JSX.Element {
   return (
     <div className="min-h-screen">
       <SiteNav current="home" />

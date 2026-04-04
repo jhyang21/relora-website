@@ -1,3 +1,4 @@
+import type { JSX } from "react";
 import { Card } from "@/components/Card";
 
 const memoryItems = [
@@ -8,7 +9,7 @@ const memoryItems = [
   "follow up: next friday",
 ];
 
-export function MemoryCardStack() {
+export function MemoryCardStack(): JSX.Element {
   return (
     <div className="grid min-w-0 gap-4 md:relative md:block md:min-h-[340px]">
       <Card className="w-full p-4 md:absolute md:left-4 md:top-5 md:w-[84%] md:rotate-[-3deg]" fold>

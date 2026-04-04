@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { JSX } from "react";
 import { Card } from "@/components/Card";
 import { HomeInteractiveSections } from "@/components/HomeInteractiveSections";
 import { MemoryCardStack } from "@/components/MemoryCardStack";
@@ -32,7 +33,7 @@ export const metadata: Metadata = {
   description: "Remember the small details that build relationships.",
 };
 
-export default function HomePage() {
+export default function HomePage(): JSX.Element {
   return (
     <div className="min-h-screen">
       <SiteNav current="home" />
