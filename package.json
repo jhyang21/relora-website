@@ -18,6 +18,7 @@
     "test:api:request-data:honeypot": "node scripts/test-request-data-api.mjs --honeypot"
   },
   "dependencies": {
+    "motion": "^12.38.0",
     "next": "16.2.1",
     "postgres": "^3.4.8",
     "react": "19.2.3",

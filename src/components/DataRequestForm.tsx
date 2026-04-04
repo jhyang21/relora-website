@@ -29,7 +29,7 @@ export function DataRequestForm() {
 
   if (submitState === "success") {
     return (
-      <div className="paper-card card-fold mt-8 max-w-2xl p-6">
+      <div className="paper-card card-fold mt-8 max-w-2xl min-w-0 p-6">
         <p className="text-xs uppercase tracking-[0.12em] text-[var(--color-secondary)]">
           request received
         </p>
@@ -104,8 +104,8 @@ export function DataRequestForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-8">
-      <div className="paper-card max-w-2xl space-y-6 p-4 md:p-6">
+    <form onSubmit={handleSubmit} className="mt-8 min-w-0">
+      <div className="paper-card max-w-2xl min-w-0 space-y-6 p-4 md:p-6">
         {/* Honeypot */}
         <input
           type="text"
@@ -142,7 +142,7 @@ export function DataRequestForm() {
           <p className="text-xs uppercase tracking-[0.12em] text-[var(--color-secondary)]">
             Request type
           </p>
-          <div className="grid gap-3" role="radiogroup" aria-label="Request type">
+          <div className="grid grid-cols-1 gap-3" role="radiogroup" aria-label="Request type">
             {REQUEST_TYPES.map(({ label, value }) => (
               <button
                 key={value}
@@ -213,7 +213,7 @@ export function DataRequestForm() {
           <button
             type="submit"
             disabled={submitState === "submitting"}
-            className="rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-[var(--color-paper)] transition hover:bg-[var(--color-primary-hover)] disabled:cursor-not-allowed disabled:opacity-75"
+            className="inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-[var(--color-paper)] transition hover:bg-[var(--color-primary-hover)] disabled:cursor-not-allowed disabled:opacity-75"
           >
             {submitState === "submitting" ? "Submitting…" : "Submit request"}
           </button>
