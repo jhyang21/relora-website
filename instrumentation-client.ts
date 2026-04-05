@@ -1,11 +1,14 @@
-import posthog from "posthog-js";
+import posthog, { type PostHogInterface } from "posthog-js";
 import {
   getAnalyticsEnabled,
   getAnalyticsHost,
   getAnalyticsToken,
   isSensitiveAnalyticsPath,
 } from "@/lib/analytics/shared";
-import { onPostHogLoaded } from "@/lib/analytics/client";
+import {
+  onPostHogLoaded,
+  setSharedAnalyticsClient,
+} from "@/lib/analytics/client";
 
 function getInitialPathname(): string {
   if (typeof window === "undefined") {
@@ -13,6 +16,11 @@ function getInitialPathname(): string {
   }
 
   return window.location.pathname || "/";
+}
+
+function handlePostHogLoaded(client: PostHogInterface): void {
+  setSharedAnalyticsClient(client);
+  onPostHogLoaded(client);
 }
 
 function initializePostHog(): void {
@@ -35,11 +43,13 @@ function initializePostHog(): void {
     defaults: "2026-01-30",
     disable_session_recording: isSensitivePath,
     disable_surveys: true,
-    loaded: onPostHogLoaded,
+    loaded: handlePostHogLoaded,
     mask_all_element_attributes: true,
     mask_all_text: true,
     person_profiles: "identified_only",
   });
+
+  setSharedAnalyticsClient(posthog);
 }
 
 initializePostHog();
