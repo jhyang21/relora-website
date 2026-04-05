@@ -13,6 +13,10 @@ import {
 
 export type BrowserAnalyticsClient = PostHogInterface;
 
+const CLIENT_ANALYTICS_CAPTURE_OPTIONS = {
+  send_instantly: true,
+} as const;
+
 declare global {
   interface Window {
     __reloraPostHogClient?: BrowserAnalyticsClient;
@@ -106,7 +110,11 @@ export function trackAnalyticsEvent(
     return;
   }
 
-  analyticsClient.capture(event, sanitizeAnalyticsPayload(payload));
+  analyticsClient.capture(
+    event,
+    sanitizeAnalyticsPayload(payload),
+    CLIENT_ANALYTICS_CAPTURE_OPTIONS,
+  );
 }
 
 export function getAnalyticsDistinctId(): string | null {
