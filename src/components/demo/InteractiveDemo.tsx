@@ -540,6 +540,9 @@ export function InteractiveDemo({
         isBusy={isPickerDisabled}
         onSelect={handleScenarioSelect}
       />
+      <p className="text-sm text-[var(--color-muted)]">
+        Sample playback. No microphone access used.
+      </p>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
         <div className="flex h-full min-w-0 flex-col gap-5">
