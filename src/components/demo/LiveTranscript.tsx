@@ -167,7 +167,7 @@ function renderTranscriptBody(
   if (visibleWords.length === 0) {
     return (
       <p className="break-words text-[var(--color-muted)]">
-        Pick a scenario to watch the note appear word by word.
+        Pick a scenario to watch the sample note appear word by word.
       </p>
     );
   }

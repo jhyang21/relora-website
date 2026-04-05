@@ -78,9 +78,9 @@ function getCoreScale(
 function getVoiceStatusLabel(phase: VoiceOrbProps["phase"]): string | null {
   switch (phase) {
     case "idle":
-      return "Ready to simulate";
+      return "Sample ready";
     case "recording":
-      return "Listening";
+      return "Playing sample note";
     case "processing":
       return "Extracting details";
     default:
