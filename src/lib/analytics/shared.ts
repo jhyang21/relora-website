@@ -19,6 +19,10 @@ export const SERVER_ANALYTICS_EVENTS = [
   "waitlist_submit_failed",
   "data_request_submit_succeeded",
   "data_request_submit_failed",
+  "demo_scenario_started",
+  "demo_replayed",
+  "demo_completed",
+  "demo_cta_clicked",
 ] as const;
 
 export type ClientAnalyticsEvent = (typeof CLIENT_ANALYTICS_EVENTS)[number];

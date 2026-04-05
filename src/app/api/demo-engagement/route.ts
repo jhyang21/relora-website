@@ -1,5 +1,13 @@
 import postgres, { type Sql } from "postgres";
 import { NextResponse } from "next/server";
+import {
+  captureServerAnalyticsEvent,
+  getRequestSiteHost,
+} from "@/lib/analytics/server";
+import type {
+  AnalyticsPayload,
+  ServerAnalyticsEvent,
+} from "@/lib/analytics/shared";
 import { isDemoScenarioSlug } from "@/lib/demoScenarios";
 
 const SESSION_ID_REGEX = /^[a-zA-Z0-9-]{8,120}$/;
@@ -24,12 +32,24 @@ type DemoEngagementRow = {
   cta_clicked: string | null;
 };
 
+type DemoEngagementEventType =
+  | "scenario_started"
+  | "replayed"
+  | "completed"
+  | "cta_clicked";
+
 type DemoEngagementPayload = {
   sessionId: string;
   scenario: string;
   demoCompleted: boolean | undefined;
   replayed: boolean | undefined;
   ctaClicked: string;
+  eventType: DemoEngagementEventType | null;
+};
+
+type DemoAnalyticsEvent = {
+  event: ServerAnalyticsEvent;
+  properties: AnalyticsPayload;
 };
 
 function normalizeText(value: unknown): string {
@@ -46,6 +66,19 @@ function normalizeBoolean(value: unknown): boolean | undefined {
   }
 
   return undefined;
+}
+
+function normalizeEventType(value: unknown): DemoEngagementEventType | null {
+  if (
+    value === "scenario_started" ||
+    value === "replayed" ||
+    value === "completed" ||
+    value === "cta_clicked"
+  ) {
+    return value;
+  }
+
+  return null;
 }
 
 function getSqlClient(): Sql {
@@ -86,6 +119,7 @@ function normalizeDemoEngagementPayload(
     demoCompleted: normalizeBoolean(body.demoCompleted),
     replayed: normalizeBoolean(body.replayed),
     ctaClicked: normalizeText(body.ctaClicked),
+    eventType: normalizeEventType(body.eventType),
   };
 }
 
@@ -105,6 +139,68 @@ function validateDemoEngagementPayload(
   }
 
   return null;
+}
+
+function buildScenarioAnalyticsProperties(
+  scenario: string | null,
+): AnalyticsPayload {
+  if (!scenario) {
+    return {};
+  }
+
+  return { scenario };
+}
+
+function buildDemoAnalyticsEvents(
+  payload: DemoEngagementPayload,
+  scenario: string | null,
+): DemoAnalyticsEvent[] {
+  const scenarioProperties = buildScenarioAnalyticsProperties(scenario);
+
+  switch (payload.eventType) {
+    case "scenario_started":
+      return [{ event: "demo_scenario_started", properties: scenarioProperties }];
+    case "replayed":
+      return [{ event: "demo_replayed", properties: scenarioProperties }];
+    case "completed":
+      return [{ event: "demo_completed", properties: scenarioProperties }];
+    case "cta_clicked":
+      return [
+        {
+          event: "demo_cta_clicked",
+          properties: {
+            ...scenarioProperties,
+            cta_id: payload.ctaClicked,
+          },
+        },
+      ];
+    default:
+      if (payload.replayed) {
+        return [{ event: "demo_replayed", properties: scenarioProperties }];
+      }
+
+      if (payload.demoCompleted) {
+        return [{ event: "demo_completed", properties: scenarioProperties }];
+      }
+
+      if (payload.ctaClicked) {
+        return [
+          {
+            event: "demo_cta_clicked",
+            properties: {
+              ...scenarioProperties,
+              cta_id: payload.ctaClicked,
+            },
+          },
+        ];
+      }
+
+      if (payload.scenario) {
+        return [{ event: "demo_scenario_started", properties: scenarioProperties }];
+      }
+
+      return [];
+  }
 }
 
 function getNextScenario(
@@ -337,6 +433,20 @@ export async function POST(request: Request): Promise<NextResponse> {
         )
       `;
     }
+
+    const analyticsEvents = buildDemoAnalyticsEvents(payload, nextScenario);
+    const siteHost = getRequestSiteHost(request);
+
+    await Promise.allSettled(
+      analyticsEvents.map((analyticsEvent) =>
+        captureServerAnalyticsEvent({
+          distinctId: payload.sessionId,
+          event: analyticsEvent.event,
+          properties: analyticsEvent.properties,
+          siteHost,
+        }),
+      ),
+    );
 
     return buildSuccessResponse(Boolean(existingRow));
   } catch {

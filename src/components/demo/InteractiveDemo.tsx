@@ -9,7 +9,6 @@ import { DemoTimeline } from "@/components/demo/DemoTimeline";
 import { ExtractionCards } from "@/components/demo/ExtractionCards";
 import { LiveTranscript } from "@/components/demo/LiveTranscript";
 import { VoiceOrb } from "@/components/demo/VoiceOrb";
-import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import { demoAudioLevels } from "@/lib/demoAudioLevels";
 import { getOrCreateDemoSessionId } from "@/lib/demoSession";
 import {
@@ -23,7 +22,14 @@ type InteractiveDemoProps = {
   onJoinWaitlist: () => void;
 };
 
+type DemoEngagementEventType =
+  | "scenario_started"
+  | "replayed"
+  | "completed"
+  | "cta_clicked";
+
 type DemoEngagementPatch = {
+  eventType?: DemoEngagementEventType;
   scenario?: DemoScenarioSlug;
   demoCompleted?: boolean;
   replayed?: boolean;
@@ -299,16 +305,22 @@ export function InteractiveDemo({
 
   const trackDemoReplay = useCallback(
     function trackDemoReplay(slug: DemoScenarioSlug): void {
-      trackAnalyticsEvent("demo_replayed", { scenario: slug });
-      postEngagement({ replayed: true });
+      postEngagement({
+        eventType: "replayed",
+        replayed: true,
+        scenario: slug,
+      });
     },
     [postEngagement],
   );
 
   const trackDemoCompletion = useCallback(
     function trackDemoCompletion(slug: DemoScenarioSlug): void {
-      trackAnalyticsEvent("demo_completed", { scenario: slug });
-      postEngagement({ demoCompleted: true });
+      postEngagement({
+        eventType: "completed",
+        demoCompleted: true,
+        scenario: slug,
+      });
     },
     [postEngagement],
   );
@@ -400,12 +412,13 @@ export function InteractiveDemo({
         setVisibleCards(DEFAULT_VISIBLE_CARDS);
       }
 
-      trackAnalyticsEvent("demo_scenario_started", { scenario: slug });
+      postEngagement({
+        eventType: "scenario_started",
+        scenario: slug,
+      });
 
       if (hasReplayHistory) {
         trackDemoReplay(slug);
-      } else {
-        postEngagement({ scenario: slug });
       }
 
       if (reducedMotionEnabled) {
@@ -476,11 +489,11 @@ export function InteractiveDemo({
 
   const handleJoinWaitlist = useCallback(function handleJoinWaitlist(): void {
     stopCurrentAudio();
-    trackAnalyticsEvent("demo_cta_clicked", {
-      cta_id: "waitlist-scroll",
+    postEngagement({
+      eventType: "cta_clicked",
+      ctaClicked: "waitlist-scroll",
       scenario: selectedSlug ?? FALLBACK_SCENARIO_SLUG,
     });
-    postEngagement({ ctaClicked: "waitlist-scroll" });
     onJoinWaitlist();
   }, [onJoinWaitlist, postEngagement, selectedSlug, stopCurrentAudio]);
 
