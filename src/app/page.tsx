@@ -53,12 +53,16 @@ export default function HomePage(): JSX.Element {
               <SmoothScrollLink
                 href="#waitlist"
                 className="inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-[var(--color-paper)] transition hover:bg-[var(--color-primary-hover)]"
+                analyticsEvent="hero_cta_clicked"
+                analyticsProperties={{ cta_id: "hero_join_waitlist" }}
               >
                 Join the waitlist
               </SmoothScrollLink>
               <SmoothScrollLink
                 href="#demo"
                 className="inline-flex min-h-11 items-center justify-center rounded-full border border-[var(--color-ink)] px-4 py-2 text-sm font-medium text-[var(--color-ink)] transition hover:bg-[var(--color-primary-tint)]"
+                analyticsEvent="hero_cta_clicked"
+                analyticsProperties={{ cta_id: "hero_see_demo" }}
               >
                 See it in action
               </SmoothScrollLink>

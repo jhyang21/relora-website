@@ -9,6 +9,7 @@ import { DemoTimeline } from "@/components/demo/DemoTimeline";
 import { ExtractionCards } from "@/components/demo/ExtractionCards";
 import { LiveTranscript } from "@/components/demo/LiveTranscript";
 import { VoiceOrb } from "@/components/demo/VoiceOrb";
+import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import { demoAudioLevels } from "@/lib/demoAudioLevels";
 import { getOrCreateDemoSessionId } from "@/lib/demoSession";
 import {
@@ -296,6 +297,22 @@ export function InteractiveDemo({
     }).catch(() => undefined);
   }, []);
 
+  const trackDemoReplay = useCallback(
+    function trackDemoReplay(slug: DemoScenarioSlug): void {
+      trackAnalyticsEvent("demo_replayed", { scenario: slug });
+      postEngagement({ replayed: true });
+    },
+    [postEngagement],
+  );
+
+  const trackDemoCompletion = useCallback(
+    function trackDemoCompletion(slug: DemoScenarioSlug): void {
+      trackAnalyticsEvent("demo_completed", { scenario: slug });
+      postEngagement({ demoCompleted: true });
+    },
+    [postEngagement],
+  );
+
   useEffect(() => {
     sessionIdRef.current = getOrCreateDemoSessionId();
     const initialSoundEnabled = getStoredSoundEnabled();
@@ -326,7 +343,7 @@ export function InteractiveDemo({
       });
     }, RECORDING_TICK_MS);
 
-      return () => window.clearInterval(intervalId);
+    return () => window.clearInterval(intervalId);
   }, [phase, selectedScenario]);
 
   useEffect(() => {
@@ -364,6 +381,7 @@ export function InteractiveDemo({
       const scenario = demoScenarioMap[slug];
       const timeline = getScenarioTimeline(scenario);
       const reducedMotionEnabled = getEffectiveReducedMotionPreference(reduceMotion);
+      const hasReplayHistory = completedScenarioSlugsRef.current.size > 0;
 
       clearPhaseTimers();
       stopCurrentAudio();
@@ -382,15 +400,17 @@ export function InteractiveDemo({
         setVisibleCards(DEFAULT_VISIBLE_CARDS);
       }
 
-      if (completedScenarioSlugsRef.current.size > 0) {
-        postEngagement({ replayed: true });
+      trackAnalyticsEvent("demo_scenario_started", { scenario: slug });
+
+      if (hasReplayHistory) {
+        trackDemoReplay(slug);
       } else {
         postEngagement({ scenario: slug });
       }
 
       if (reducedMotionEnabled) {
         markScenarioCompleted(completedScenarioSlugsRef.current, slug);
-        postEngagement({ demoCompleted: true });
+        trackDemoCompletion(slug);
 
         const highlightTimeoutId = window.setTimeout(() => {
           setHighlightsReady(true);
@@ -431,7 +451,7 @@ export function InteractiveDemo({
       const completeTimeoutId = window.setTimeout(() => {
         setPhase("complete");
         markScenarioCompleted(completedScenarioSlugsRef.current, slug);
-        postEngagement({ demoCompleted: true });
+        trackDemoCompletion(slug);
       }, timeline.cardsBaseTimeMs + scenario.durations.cardsMs);
 
       phaseTimeoutsRef.current = [
@@ -443,14 +463,26 @@ export function InteractiveDemo({
         ...keyThingTimeoutIds,
       ];
     },
-    [clearPhaseTimers, playScenarioAudio, postEngagement, reduceMotion, stopCurrentAudio],
+    [
+      clearPhaseTimers,
+      playScenarioAudio,
+      postEngagement,
+      reduceMotion,
+      stopCurrentAudio,
+      trackDemoCompletion,
+      trackDemoReplay,
+    ],
   );
 
   const handleJoinWaitlist = useCallback(function handleJoinWaitlist(): void {
     stopCurrentAudio();
+    trackAnalyticsEvent("demo_cta_clicked", {
+      cta_id: "waitlist-scroll",
+      scenario: selectedSlug ?? FALLBACK_SCENARIO_SLUG,
+    });
     postEngagement({ ctaClicked: "waitlist-scroll" });
     onJoinWaitlist();
-  }, [onJoinWaitlist, postEngagement, stopCurrentAudio]);
+  }, [onJoinWaitlist, postEngagement, selectedSlug, stopCurrentAudio]);
 
   const handleReminderToggle = useCallback(function handleReminderToggle(): void {
     setReminderEnabled((current) => !current);
@@ -467,17 +499,14 @@ export function InteractiveDemo({
       }
 
       if (hasScenarioCompleted(completedScenarioSlugsRef.current, slug)) {
-        if (completedScenarioSlugsRef.current.size > 0) {
-          postEngagement({ replayed: true });
-        }
-
+        trackDemoReplay(slug);
         showCompletedScenario(demoScenarioMap[slug]);
         return;
       }
 
       startScenario(slug);
     },
-    [isPickerDisabled, postEngagement, showCompletedScenario, startScenario],
+    [isPickerDisabled, showCompletedScenario, startScenario, trackDemoReplay],
   );
 
   return (

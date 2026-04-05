@@ -44,3 +44,6 @@ PROGRESS.md
 .playwright-cli/*
 .next-dev.stdout.log
 .next-dev.stderr.log
+.codex-dev.out.log
+.codex-dev.err.log
+output/playwright/

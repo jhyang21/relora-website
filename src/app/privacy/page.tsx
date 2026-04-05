@@ -13,7 +13,7 @@ export default function PrivacyPage(): JSX.Element {
       <SiteNav current="home" />
       <main className="mx-auto max-w-3xl break-words px-6 py-12 md:px-10">
         <h1 className="font-serif text-4xl text-[var(--color-ink)]">Privacy Policy</h1>
-        <p className="mt-2 text-sm text-[var(--color-muted)]">Last updated March 13, 2026</p>
+        <p className="mt-2 text-sm text-[var(--color-muted)]">Last updated April 4, 2026</p>
 
         <p className="mt-6 leading-7 text-[var(--color-ink)]">
           This Privacy Notice for <strong>immForm, Inc.</strong> ("we," "us," or "our") describes how and why we might
@@ -23,6 +23,7 @@ export default function PrivacyPage(): JSX.Element {
         <ul className="mt-3 list-disc space-y-1 pl-6 leading-7 text-[var(--color-ink)]">
           <li>Download and use our mobile application (<strong>Relora</strong>), or any other application of ours that links to this Privacy Notice</li>
           <li>Use <strong>Relora</strong>, a mobile application that helps users capture and organize details about people, including contacts, memories, and reminders, using voice notes</li>
+          <li>Visit our website, join our waitlist, view product demos, or submit a privacy rights request through reloraapp.com</li>
           <li>Engage with us in other related ways, including any marketing or events</li>
         </ul>
         <p className="mt-4 leading-7 text-[var(--color-ink)]">
@@ -126,6 +127,16 @@ export default function PrivacyPage(): JSX.Element {
           <li><em>Device Data.</em> We collect device data such as information about your computer, phone, tablet, or other device you use to access the Services.</li>
           <li><em>Location Data.</em> We collect location data such as information about your device's location, which can be either precise or imprecise. You can opt out by refusing access or disabling Location settings on your device.</li>
         </ul>
+        <p className="mt-4 leading-7 text-[var(--color-ink)]">
+          On our website, we use PostHog as a first-party analytics service provider to measure
+          page views, navigation patterns, product interest, clicks, and limited session replay so
+          we can understand how people use the site and improve the experience.
+        </p>
+        <p className="mt-4 leading-7 text-[var(--color-ink)]">
+          We configure website analytics to mask or exclude form inputs and free-text fields from
+          replay and autocapture, including sensitive request surfaces. We do not use this website
+          analytics data for targeted advertising, cross-site advertising, or data brokering.
+        </p>
 
         {/* Section 2 */}
         <h2 id="infouse" className="mt-10 font-serif text-2xl text-[var(--color-ink)]">2. How Do We Process Your Information?</h2>
@@ -179,6 +190,11 @@ export default function PrivacyPage(): JSX.Element {
           <li>Website Hosting Service Providers</li>
           <li>Performance Monitoring Tools</li>
         </ul>
+        <p className="mt-4 leading-7 text-[var(--color-ink)]">
+          Our data analytics providers may include PostHog for first-party product and website
+          analytics. PostHog acts as a service provider on our behalf and is used to help us
+          understand site usage and improve the product experience.
+        </p>
         <p className="mt-4 leading-7 text-[var(--color-ink)]">
           <strong>Business Transfers.</strong> We may share or transfer your information in connection with, or during
           negotiations of, any merger, sale of company assets, financing, or acquisition of all or a portion of our
@@ -338,7 +354,7 @@ export default function PrivacyPage(): JSX.Element {
                 ["C. Protected classification characteristics under state or federal law", "Gender, age, date of birth, race and ethnicity, national origin, marital status, and other demographic data", "NO"],
                 ["D. Commercial information", "Transaction information, purchase history, financial details, and payment information", "YES"],
                 ["E. Biometric information", "Fingerprints and voiceprints", "NO"],
-                ["F. Internet or other similar network activity", "Browsing history, search history, online behavior, interest data, and interactions with our and other websites, applications, systems, and advertisements", "NO"],
+                ["F. Internet or other similar network activity", "Browsing history, search history, online behavior, interest data, and interactions with our and other websites, applications, systems, and advertisements", "YES"],
                 ["G. Geolocation data", "Device location", "YES"],
                 ["H. Audio, electronic, sensory, or similar information", "Images and audio, video or call recordings created in connection with our business activities", "YES"],
                 ["I. Professional or employment-related information", "Business contact details in order to provide you our Services at a business level or job title, work history, and professional qualifications if you apply for a job with us", "NO"],
