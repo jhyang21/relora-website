@@ -12,6 +12,7 @@ import {
   featureSignalOptions,
   identityOptions,
 } from "@/lib/waitlistOptions";
+import { siteConfig } from "@/lib/site";
 
 type WaitlistFlowProps = {
   compact?: boolean;
@@ -27,6 +28,9 @@ type WaitlistSubmitResponse = {
 const TOTAL_STEPS = 6;
 const OTHER_IDENTITY_OPTION = "Other";
 const MAX_IDENTITY_OTHER_LENGTH = 120;
+const shareIntentUrl = `https://x.com/intent/post?text=${encodeURIComponent(
+  `I just joined the Relora waitlist for better personal relationship memory, developed by @andrewyang_X. Join the waitlist with me at ${siteConfig.url}`,
+)}`;
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
@@ -226,7 +230,7 @@ export function WaitlistFlow({
             : "Thanks for sharing this with us. Your answers help shape Relora."}
         </p>
         <a
-          href="https://x.com/intent/post?text=I%20just%20joined%20the%20Relora%20waitlist%20for%20better%20personal%20relationship%20memory%2C%20developed%20by%20%40andrewyang_X.%20Join%20the%20waitlist%20with%20me%20at%20www.andrewyangpersonal.com"
+          href={shareIntentUrl}
           target="_blank"
           rel="noreferrer"
           className="mt-4 inline-flex min-h-11 items-center text-sm font-semibold text-[var(--color-secondary)] underline-offset-4 hover:underline"

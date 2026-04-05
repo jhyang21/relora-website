@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import type { JSX } from "react";
 import { SiteNav } from "@/components/SiteNav";
+import { buildPageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "Privacy Policy — Relora",
+export const metadata: Metadata = buildPageMetadata({
+  title: "Privacy Policy",
   description: "Relora privacy policy. Learn how we collect, use, and protect your personal information.",
-};
+  path: "/privacy",
+});
 
 export default function PrivacyPage(): JSX.Element {
   return (
@@ -44,7 +46,7 @@ export default function PrivacyPage(): JSX.Element {
           <li><strong>How do we process your information?</strong> We process your information to provide, improve, and administer our Services, communicate with you, for security and fraud prevention, and to comply with law.</li>
           <li><strong>How do we keep your information safe?</strong> We have organizational and technical processes in place to protect your personal information. However, no electronic transmission over the internet can be guaranteed 100% secure.</li>
           <li><strong>What are your rights?</strong> Depending on where you are located, applicable privacy law may give you certain rights regarding your personal information.</li>
-          <li><strong>How do you exercise your rights?</strong> Visit <a className="text-[var(--color-primary)] underline hover:text-[var(--color-primary-hover)]" href="http://www.reloraapp.com/request-data">reloraapp.com/request-data</a> or contact us directly.</li>
+          <li><strong>How do you exercise your rights?</strong> Visit <a className="text-[var(--color-primary)] underline hover:text-[var(--color-primary-hover)]" href="/request-data">reloraapp.com/request-data</a> or contact us directly.</li>
         </ul>
 
         <h2 className="mt-10 font-serif text-2xl text-[var(--color-ink)]">Table of Contents</h2>
@@ -385,7 +387,7 @@ export default function PrivacyPage(): JSX.Element {
 
         <h3 className="mt-6 text-base font-semibold text-[var(--color-ink)]">How to Exercise Your Rights</h3>
         <ul className="mt-3 list-disc space-y-1 pl-6 leading-7 text-[var(--color-ink)]">
-          <li>By visiting <a className="text-[var(--color-primary)] underline hover:text-[var(--color-primary-hover)]" href="http://www.reloraapp.com/request-data">reloraapp.com/request-data</a></li>
+          <li>By visiting <a className="text-[var(--color-primary)] underline hover:text-[var(--color-primary-hover)]" href="/request-data">reloraapp.com/request-data</a></li>
           <li>By emailing us at <a className="text-[var(--color-primary)] underline hover:text-[var(--color-primary-hover)]" href="mailto:contact@immform.com">contact@immform.com</a></li>
           <li>By mailing to <strong>1111B S Governors Ave # 3511, Dover, DE 19904</strong></li>
         </ul>
@@ -429,7 +431,7 @@ export default function PrivacyPage(): JSX.Element {
           You have the right to request access to the personal information we collect from you, details about how we
           have processed it, correct inaccuracies, or delete your personal information. To request to review, update,
           or delete your personal information, please visit:{" "}
-          <a className="text-[var(--color-primary)] underline hover:text-[var(--color-primary-hover)]" href="http://www.reloraapp.com/request-data">reloraapp.com/request-data</a>.
+          <a className="text-[var(--color-primary)] underline hover:text-[var(--color-primary-hover)]" href="/request-data">reloraapp.com/request-data</a>.
         </p>
 
         <div className="mt-16 border-t border-[var(--color-border-warm)] pt-8 text-sm text-[var(--color-muted)]">

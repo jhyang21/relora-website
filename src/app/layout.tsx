@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import { PostHogRouteBridge } from "@/components/analytics/PostHogRouteBridge";
+import { buildPageMetadata, siteConfig } from "@/lib/site";
 import "./globals.css";
 
 const inter = Inter({
@@ -14,15 +15,36 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Relora | Personal relationship memory app",
-  description: "Join the Relora waitlist and remember the small details that build relationships.",
-  metadataBase: new URL("https://www.reloraapp.com"),
-  openGraph: {
-    title: "Relora waitlist",
-    description: "Remember the small details that build relationships.",
-    type: "website",
-  },
+  ...buildPageMetadata(),
+  metadataBase: new URL(siteConfig.url),
+  applicationName: siteConfig.name,
+  authors: [{ name: siteConfig.creator }],
+  creator: siteConfig.creator,
+  publisher: siteConfig.creator,
 };
+
+const structuredData = [
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: siteConfig.name,
+    description: siteConfig.description,
+    url: siteConfig.url,
+    email: siteConfig.contactEmail,
+    sameAs: [siteConfig.linkedInUrl],
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: siteConfig.name,
+    description: siteConfig.description,
+    url: siteConfig.url,
+    publisher: {
+      "@type": "Organization",
+      name: siteConfig.creator,
+    },
+  },
+];
 
 export default function RootLayout({
   children,
@@ -32,6 +54,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${fraunces.variable} antialiased`}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
         <PostHogRouteBridge />
         {children}
       </body>

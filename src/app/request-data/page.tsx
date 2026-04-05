@@ -2,12 +2,22 @@ import type { Metadata } from "next";
 import type { JSX } from "react";
 import { SiteNav } from "@/components/SiteNav";
 import { DataRequestForm } from "@/components/DataRequestForm";
+import { buildPageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "Data Request — Relora",
+export const metadata: Metadata = buildPageMetadata({
+  title: "Data Request",
   description:
     "Exercise your privacy rights. Request access to, correction of, or deletion of your personal data or account.",
-};
+  path: "/request-data",
+  robots: {
+    index: false,
+    follow: true,
+    googleBot: {
+      index: false,
+      follow: true,
+    },
+  },
+});
 
 export default function RequestDataPage(): JSX.Element {
   return (
