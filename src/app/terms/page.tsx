@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import type { JSX } from "react";
 import { SiteNav } from "@/components/SiteNav";
+import { buildPageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "Terms of Use — Relora",
+export const metadata: Metadata = buildPageMetadata({
+  title: "Terms of Use",
   description: "Relora terms of use. Read the terms and conditions for using Relora.",
-};
+  path: "/terms",
+});
 
 export default function TermsPage(): JSX.Element {
   return (

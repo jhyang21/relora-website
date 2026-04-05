@@ -5,6 +5,7 @@ import { HomeInteractiveSections } from "@/components/HomeInteractiveSections";
 import { MemoryCardStack } from "@/components/MemoryCardStack";
 import { SiteNav } from "@/components/SiteNav";
 import { SmoothScrollLink } from "@/components/SmoothScrollLink";
+import { buildPageMetadata } from "@/lib/site";
 
 const howItWorks = [
   {
@@ -28,10 +29,7 @@ const useCases = [
   "Friends and family",
 ];
 
-export const metadata: Metadata = {
-  title: "Relora",
-  description: "Remember the small details that build relationships.",
-};
+export const metadata: Metadata = buildPageMetadata();
 
 export default function HomePage(): JSX.Element {
   return (
