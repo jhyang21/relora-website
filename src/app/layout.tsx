@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter } from "next/font/google";
+import { PostHogRouteBridge } from "@/components/analytics/PostHogRouteBridge";
 import "./globals.css";
 
 const inter = Inter({
@@ -31,6 +32,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${fraunces.variable} antialiased`}>
+        <PostHogRouteBridge />
         {children}
       </body>
     </html>

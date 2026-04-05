@@ -1,6 +1,11 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import type { FormEvent, JSX } from "react";
+import { useState } from "react";
+import {
+  getAnalyticsDistinctId,
+  trackAnalyticsEvent,
+} from "@/lib/analytics/client";
 
 type SubmitState = "idle" | "submitting" | "success" | "error";
 
@@ -14,11 +19,26 @@ const REQUEST_TYPES = [
 
 const MAX_DETAILS_LENGTH = 500;
 
-function isValidEmail(email: string) {
+function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
-export function DataRequestForm() {
+async function readResponseMessage(response: Response): Promise<string | undefined> {
+  const contentType = response.headers.get("content-type") ?? "";
+
+  try {
+    if (contentType.includes("application/json")) {
+      const payload = (await response.json()) as { message?: string };
+      return payload.message;
+    }
+
+    return (await response.text()).trim() || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+export function DataRequestForm(): JSX.Element {
   const [email, setEmail] = useState("");
   const [requestType, setRequestType] = useState("");
   const [name, setName] = useState("");
@@ -29,7 +49,7 @@ export function DataRequestForm() {
 
   if (submitState === "success") {
     return (
-      <div className="paper-card card-fold mt-8 max-w-2xl p-6">
+      <div className="paper-card card-fold mt-8 max-w-2xl min-w-0 p-6">
         <p className="text-xs uppercase tracking-[0.12em] text-[var(--color-secondary)]">
           request received
         </p>
@@ -37,8 +57,8 @@ export function DataRequestForm() {
           We have received your request.
         </h3>
         <p className="mt-2 text-sm text-[var(--color-muted)]">
-          We will review your request and respond within 45 days. If you have questions in the
-          meantime, email{" "}
+          We will review your request and respond within 45 days. If you have
+          questions in the meantime, email{" "}
           <a
             href="mailto:contact@immform.com"
             className="font-semibold text-[var(--color-primary)] hover:text-[var(--color-primary-hover)]"
@@ -51,7 +71,7 @@ export function DataRequestForm() {
     );
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
 
     if (!isValidEmail(email)) {
@@ -71,54 +91,57 @@ export function DataRequestForm() {
 
     setSubmitState("submitting");
     setErrorMessage("");
+    trackAnalyticsEvent("data_request_submit_started", {
+      request_type: requestType,
+    });
+    const analyticsDistinctId = getAnalyticsDistinctId();
 
     try {
       const response = await fetch("/api/request-data", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, requestType, name, details, website }),
+        body: JSON.stringify({
+          analyticsDistinctId,
+          details,
+          email,
+          name,
+          requestType,
+          website,
+        }),
       });
 
-      let payloadMessage: string | undefined;
-      const contentType = response.headers.get("content-type") ?? "";
-      try {
-        if (contentType.includes("application/json")) {
-          const payload = (await response.json()) as { message?: string };
-          payloadMessage = payload.message;
-        } else {
-          payloadMessage = (await response.text()).trim() || undefined;
-        }
-      } catch {
-        payloadMessage = undefined;
-      }
+      const payloadMessage = await readResponseMessage(response);
 
       if (!response.ok) {
-        throw new Error(payloadMessage ?? "Could not submit your request. Please email contact@immform.com.");
+        throw new Error(
+          payloadMessage ??
+            "Could not submit your request. Please email contact@immform.com.",
+        );
       }
 
       setSubmitState("success");
     } catch (error) {
       setSubmitState("error");
-      setErrorMessage(error instanceof Error ? error.message : "Submission failed.");
+      setErrorMessage(
+        error instanceof Error ? error.message : "Submission failed.",
+      );
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-8">
-      <div className="paper-card max-w-2xl space-y-6 p-4 md:p-6">
-        {/* Honeypot */}
+    <form onSubmit={handleSubmit} className="ph-no-capture mt-8 min-w-0">
+      <div className="paper-card max-w-2xl min-w-0 space-y-6 p-4 md:p-6">
         <input
           type="text"
           name="website"
           tabIndex={-1}
           autoComplete="off"
           value={website}
-          onChange={(e) => setWebsite(e.target.value)}
-          className="hidden"
+          onChange={(event) => setWebsite(event.target.value)}
+          className="hidden ph-ignore-input"
           aria-hidden="true"
         />
 
-        {/* Email */}
         <div className="space-y-2">
           <label
             htmlFor="email"
@@ -132,17 +155,20 @@ export function DataRequestForm() {
             required
             placeholder="you@example.com"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-full border border-[var(--color-border-warm)] bg-[var(--color-paper)] px-4 py-3 text-[var(--color-ink)] placeholder:text-[var(--color-muted)]"
+            onChange={(event) => setEmail(event.target.value)}
+            className="ph-ignore-input w-full rounded-full border border-[var(--color-border-warm)] bg-[var(--color-paper)] px-4 py-3 text-[var(--color-ink)] placeholder:text-[var(--color-muted)]"
           />
         </div>
 
-        {/* Request type */}
         <div className="space-y-3">
           <p className="text-xs uppercase tracking-[0.12em] text-[var(--color-secondary)]">
             Request type
           </p>
-          <div className="grid gap-3" role="radiogroup" aria-label="Request type">
+          <div
+            className="grid grid-cols-1 gap-3"
+            role="radiogroup"
+            aria-label="Request type"
+          >
             {REQUEST_TYPES.map(({ label, value }) => (
               <button
                 key={value}
@@ -165,14 +191,15 @@ export function DataRequestForm() {
           </div>
         </div>
 
-        {/* Name (optional) */}
         <div className="space-y-2">
           <label
             htmlFor="name"
             className="text-xs uppercase tracking-[0.12em] text-[var(--color-secondary)]"
           >
             Full name{" "}
-            <span className="normal-case text-[var(--color-muted)]">(optional — helps verification)</span>
+            <span className="normal-case text-[var(--color-muted)]">
+              (optional - helps verification)
+            </span>
           </label>
           <input
             id="name"
@@ -180,19 +207,20 @@ export function DataRequestForm() {
             maxLength={120}
             placeholder="Your name"
             value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-2xl border border-[var(--color-border-warm)] bg-[var(--color-paper)] px-4 py-3 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-muted)]"
+            onChange={(event) => setName(event.target.value)}
+            className="ph-ignore-input w-full rounded-2xl border border-[var(--color-border-warm)] bg-[var(--color-paper)] px-4 py-3 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-muted)]"
           />
         </div>
 
-        {/* Details (optional) */}
         <div className="space-y-2">
           <label
             htmlFor="details"
             className="text-xs uppercase tracking-[0.12em] text-[var(--color-secondary)]"
           >
             Additional details{" "}
-            <span className="normal-case text-[var(--color-muted)]">(optional)</span>
+            <span className="normal-case text-[var(--color-muted)]">
+              (optional)
+            </span>
           </label>
           <textarea
             id="details"
@@ -200,32 +228,28 @@ export function DataRequestForm() {
             maxLength={MAX_DETAILS_LENGTH}
             placeholder="e.g. I would like to correct my email address on file."
             value={details}
-            onChange={(e) => setDetails(e.target.value)}
-            className="w-full rounded-2xl border border-[var(--color-border-warm)] bg-[var(--color-paper)] px-4 py-3 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-muted)]"
+            onChange={(event) => setDetails(event.target.value)}
+            className="ph-ignore-input w-full rounded-2xl border border-[var(--color-border-warm)] bg-[var(--color-paper)] px-4 py-3 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-muted)]"
           />
           <p className="text-xs text-[var(--color-muted)]">
             {details.length}/{MAX_DETAILS_LENGTH}
           </p>
         </div>
 
-        {/* Submit */}
         <div>
           <button
             type="submit"
             disabled={submitState === "submitting"}
-            className="rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-[var(--color-paper)] transition hover:bg-[var(--color-primary-hover)] disabled:cursor-not-allowed disabled:opacity-75"
+            className="inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-[var(--color-paper)] transition hover:bg-[var(--color-primary-hover)] disabled:cursor-not-allowed disabled:opacity-75"
           >
-            {submitState === "submitting" ? "Submitting…" : "Submit request"}
+            {submitState === "submitting" ? "Submitting..." : "Submit request"}
           </button>
 
-          {submitState === "error" ? (
-            <p className="mt-3 text-sm text-[var(--color-primary-hover)]" role="alert">
-              {errorMessage}
-            </p>
-          ) : null}
-
-          {errorMessage && submitState !== "error" ? (
-            <p className="mt-3 text-sm text-[var(--color-primary-hover)]" role="alert">
+          {errorMessage ? (
+            <p
+              className="mt-3 text-sm text-[var(--color-primary-hover)]"
+              role="alert"
+            >
               {errorMessage}
             </p>
           ) : null}

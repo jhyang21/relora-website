@@ -1,6 +1,11 @@
 import postgres, { type Sql } from "postgres";
 import { Resend } from "resend";
 import { NextResponse } from "next/server";
+import { normalizeAnalyticsDistinctId } from "@/lib/analytics/shared";
+import {
+  captureServerAnalyticsEvent,
+  getRequestSiteHost,
+} from "@/lib/analytics/server";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_DETAILS_LENGTH = 500;
@@ -9,7 +14,13 @@ const RATE_LIMIT_WINDOW_SECONDS = 60 * 60;
 const RATE_LIMIT_MAX_REQUESTS_PER_IP = 10;
 const RATE_LIMIT_MAX_REQUESTS_PER_EMAIL = 3;
 const RATE_LIMIT_PRUNE_AGE_SECONDS = RATE_LIMIT_WINDOW_SECONDS * 2;
-const VALID_REQUEST_TYPES = new Set(["access", "correction", "deletion", "account_deletion", "opt_out"]);
+const VALID_REQUEST_TYPES = new Set([
+  "access",
+  "correction",
+  "deletion",
+  "account_deletion",
+  "opt_out",
+]);
 const NOTIFY_EMAIL = "andrew@immform.com";
 
 const REQUEST_TYPE_LABELS: Record<string, string> = {
@@ -27,16 +38,23 @@ type RateLimitResult = {
   count: number;
   retry_after_seconds: number;
 };
+type RateLimitState = {
+  limited: boolean;
+  retryAfterSeconds: number;
+};
+type SafeRequestAnalyticsProperties = {
+  request_type: string | null;
+};
 
-function normalizeEmail(email: string) {
+function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
-function normalizeText(value: unknown) {
+function normalizeText(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function getSqlClient() {
+function getSqlClient(): Sql {
   if (!process.env.POSTGRES_URL) {
     throw new Error("Missing POSTGRES_URL environment variable.");
   }
@@ -48,7 +66,7 @@ function getSqlClient() {
   return sqlClient;
 }
 
-function getClientIp(request: Request) {
+function getClientIp(request: Request): string {
   const forwardedFor = request.headers.get("x-forwarded-for");
   if (forwardedFor) {
     const firstIp = forwardedFor.split(",")[0]?.trim();
@@ -65,7 +83,7 @@ function getClientIp(request: Request) {
   return "unknown";
 }
 
-async function ensureSchemas(sql: Sql) {
+async function ensureSchemas(sql: Sql): Promise<void> {
   if (!schemaReadyPromise) {
     schemaReadyPromise = (async () => {
       await sql`
@@ -98,14 +116,18 @@ async function ensureSchemas(sql: Sql) {
   }
 }
 
-async function pruneRateLimitRows(sql: Sql) {
+async function pruneRateLimitRows(sql: Sql): Promise<void> {
   await sql`
     DELETE FROM api_rate_limits
     WHERE window_start <= NOW() - (${RATE_LIMIT_PRUNE_AGE_SECONDS} * INTERVAL '1 second')
   `;
 }
 
-async function hitRateLimit(sql: Sql, key: string, maxRequests: number) {
+async function hitRateLimit(
+  sql: Sql,
+  key: string,
+  maxRequests: number,
+): Promise<RateLimitState> {
   const [result] = await sql<RateLimitResult[]>`
     WITH upserted AS (
       INSERT INTO api_rate_limits AS rl (key, window_start, count)
@@ -148,7 +170,7 @@ async function notifyNewRequest(params: {
   requestType: string;
   name: string;
   details: string;
-}) {
+}): Promise<void> {
   if (!process.env.RESEND_API_KEY) {
     return;
   }
@@ -161,21 +183,56 @@ async function notifyNewRequest(params: {
     to: NOTIFY_EMAIL,
     subject: `Data request: ${label}`,
     text: [
-      `New data request submitted on reloraapp.com/request-data`,
-      ``,
+      "New data request submitted on reloraapp.com/request-data",
+      "",
       `Type: ${label}`,
       `Email: ${params.email}`,
       params.name ? `Name: ${params.name}` : null,
       params.details ? `Details: ${params.details}` : null,
-      ``,
-      `Review pending requests in the data_requests table.`,
+      "",
+      "Review pending requests in the data_requests table.",
     ]
       .filter((line) => line !== null)
       .join("\n"),
   });
 }
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<NextResponse> {
+  const siteHost = getRequestSiteHost(request);
+  let analyticsDistinctId: string | null = null;
+  let safeAnalyticsProperties: SafeRequestAnalyticsProperties = {
+    request_type: null,
+  };
+
+  async function captureRequestFailure(
+    statusCode: number,
+    errorCode: string,
+  ): Promise<void> {
+    await captureServerAnalyticsEvent({
+      distinctId: analyticsDistinctId,
+      event: "data_request_submit_failed",
+      properties: {
+        ...safeAnalyticsProperties,
+        error_code: errorCode,
+        status_code: statusCode,
+      },
+      siteHost,
+    }).catch(() => undefined);
+  }
+
+  async function captureRequestSuccess(): Promise<void> {
+    await captureServerAnalyticsEvent({
+      distinctId: analyticsDistinctId,
+      event: "data_request_submit_succeeded",
+      properties: {
+        ...safeAnalyticsProperties,
+        result: "submitted",
+        status_code: 200,
+      },
+      siteHost,
+    }).catch(() => undefined);
+  }
+
   try {
     const body = (await request.json()) as Record<string, unknown>;
     const ipAddress = getClientIp(request);
@@ -186,11 +243,20 @@ export async function POST(request: Request) {
     const name = normalizeText(body.name);
     const details = normalizeText(body.details);
 
+    analyticsDistinctId = normalizeAnalyticsDistinctId(body.analyticsDistinctId);
+    safeAnalyticsProperties = {
+      request_type: VALID_REQUEST_TYPES.has(requestType) ? requestType : null,
+    };
+
     if (website.length > 0) {
-      return NextResponse.json({ ok: true, message: "Request received." }, { status: 200 });
+      return NextResponse.json(
+        { ok: true, message: "Request received." },
+        { status: 200 },
+      );
     }
 
     if (!EMAIL_REGEX.test(email)) {
+      await captureRequestFailure(400, "invalid_email");
       return NextResponse.json(
         { ok: false, message: "Please provide a valid email address." },
         { status: 400 },
@@ -198,6 +264,7 @@ export async function POST(request: Request) {
     }
 
     if (!VALID_REQUEST_TYPES.has(requestType)) {
+      await captureRequestFailure(400, "invalid_request_type");
       return NextResponse.json(
         { ok: false, message: "Please select a valid request type." },
         { status: 400 },
@@ -205,6 +272,7 @@ export async function POST(request: Request) {
     }
 
     if (details.length > MAX_DETAILS_LENGTH) {
+      await captureRequestFailure(400, "details_too_long");
       return NextResponse.json(
         { ok: false, message: "Please keep your details under 500 characters." },
         { status: 400 },
@@ -212,6 +280,7 @@ export async function POST(request: Request) {
     }
 
     if (name.length > MAX_NAME_LENGTH) {
+      await captureRequestFailure(400, "name_too_long");
       return NextResponse.json(
         { ok: false, message: "Please keep your name under 120 characters." },
         { status: 400 },
@@ -223,20 +292,44 @@ export async function POST(request: Request) {
     await pruneRateLimitRows(sql);
 
     if (ipAddress !== "unknown") {
-      const ipLimitResult = await hitRateLimit(sql, `ip:${ipAddress}`, RATE_LIMIT_MAX_REQUESTS_PER_IP);
+      const ipLimitResult = await hitRateLimit(
+        sql,
+        `ip:${ipAddress}`,
+        RATE_LIMIT_MAX_REQUESTS_PER_IP,
+      );
       if (ipLimitResult.limited) {
+        await captureRequestFailure(429, "rate_limited_ip");
         return NextResponse.json(
-          { ok: false, code: "rate_limited", message: "Too many requests. Please try again later." },
-          { status: 429, headers: { "Retry-After": String(ipLimitResult.retryAfterSeconds) } },
+          {
+            ok: false,
+            code: "rate_limited",
+            message: "Too many requests. Please try again later.",
+          },
+          {
+            status: 429,
+            headers: { "Retry-After": String(ipLimitResult.retryAfterSeconds) },
+          },
         );
       }
     }
 
-    const emailLimitResult = await hitRateLimit(sql, `email:${email}`, RATE_LIMIT_MAX_REQUESTS_PER_EMAIL);
+    const emailLimitResult = await hitRateLimit(
+      sql,
+      `email:${email}`,
+      RATE_LIMIT_MAX_REQUESTS_PER_EMAIL,
+    );
     if (emailLimitResult.limited) {
+      await captureRequestFailure(429, "rate_limited_email");
       return NextResponse.json(
-        { ok: false, code: "rate_limited", message: "Too many requests. Please try again later." },
-        { status: 429, headers: { "Retry-After": String(emailLimitResult.retryAfterSeconds) } },
+        {
+          ok: false,
+          code: "rate_limited",
+          message: "Too many requests. Please try again later.",
+        },
+        {
+          status: 429,
+          headers: { "Retry-After": String(emailLimitResult.retryAfterSeconds) },
+        },
       );
     }
 
@@ -250,19 +343,27 @@ export async function POST(request: Request) {
       )
     `;
 
-    try {
-      await notifyNewRequest({ email, requestType, name, details });
-    } catch {
-      // Email notification is best-effort — don't fail the user's request.
-    }
+    await notifyNewRequest({ email, requestType, name, details }).catch(
+      () => undefined,
+    );
 
+    await captureRequestSuccess();
     return NextResponse.json(
-      { ok: true, code: "submitted", message: "Your request has been received. We will respond within 45 days." },
+      {
+        ok: true,
+        code: "submitted",
+        message: "Your request has been received. We will respond within 45 days.",
+      },
       { status: 200 },
     );
   } catch {
+    await captureRequestFailure(500, "unknown_error");
     return NextResponse.json(
-      { ok: false, message: "Could not submit your request right now. Please email contact@immform.com." },
+      {
+        ok: false,
+        message:
+          "Could not submit your request right now. Please email contact@immform.com.",
+      },
       { status: 500 },
     );
   }

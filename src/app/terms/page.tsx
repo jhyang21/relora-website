@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { JSX } from "react";
 import { SiteNav } from "@/components/SiteNav";
 
 export const metadata: Metadata = {
@@ -6,11 +7,11 @@ export const metadata: Metadata = {
   description: "Relora terms of use. Read the terms and conditions for using Relora.",
 };
 
-export default function TermsPage() {
+export default function TermsPage(): JSX.Element {
   return (
     <div className="min-h-screen">
       <SiteNav current="home" />
-      <main className="mx-auto max-w-3xl px-6 py-12 md:px-10">
+      <main className="mx-auto max-w-3xl break-words px-6 py-12 md:px-10">
         <h1 className="font-serif text-4xl text-[var(--color-ink)]">Terms of Use</h1>
         <p className="mt-2 text-sm text-[var(--color-muted)]">Last updated March 13, 2026</p>
 
@@ -259,8 +260,11 @@ export default function TermsPage() {
         </p>
 
         <div className="mt-16 border-t border-[var(--color-border-warm)] pt-8 text-sm text-[var(--color-muted)]">
-          &copy; {new Date().getFullYear()} immForm, Inc. All rights reserved. &middot;{" "}
-          <a className="text-[var(--color-primary)] underline hover:text-[var(--color-primary-hover)]" href="/privacy">Privacy Policy</a>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <span>&copy; {new Date().getFullYear()} immForm, Inc. All rights reserved.</span>
+            <span aria-hidden="true">&middot;</span>
+            <a className="inline-flex min-h-11 items-center text-[var(--color-primary)] underline hover:text-[var(--color-primary-hover)]" href="/privacy">Privacy Policy</a>
+          </div>
         </div>
       </main>
     </div>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { JSX } from "react";
 import { SiteNav } from "@/components/SiteNav";
 import { DataRequestForm } from "@/components/DataRequestForm";
 
@@ -8,11 +9,11 @@ export const metadata: Metadata = {
     "Exercise your privacy rights. Request access to, correction of, or deletion of your personal data or account.",
 };
 
-export default function RequestDataPage() {
+export default function RequestDataPage(): JSX.Element {
   return (
     <div className="min-h-screen">
       <SiteNav current="home" />
-      <main className="mx-auto max-w-3xl px-6 py-12 md:px-10">
+      <main className="mx-auto max-w-3xl break-words px-6 py-12 md:px-10">
         <h1 className="font-serif text-4xl text-[var(--color-ink)]">Request Your Data</h1>
         <p className="mt-2 text-sm text-[var(--color-muted)]">We respond within 45 days.</p>
         <p className="mt-6 leading-7 text-[var(--color-ink)]">
