@@ -30,6 +30,8 @@ export type ServerAnalyticsEvent = (typeof SERVER_ANALYTICS_EVENTS)[number];
 
 const DEFAULT_POSTHOG_HOST = "https://us.i.posthog.com";
 const MAX_ANALYTICS_DISTINCT_ID_LENGTH = 200;
+const MAX_ANALYTICS_SESSION_ID_LENGTH = 200;
+const MAX_ANALYTICS_URL_LENGTH = 2048;
 const SENSITIVE_ANALYTICS_PATHS: readonly string[] = ["/request-data"];
 
 function isAnalyticsScalar(value: unknown): value is AnalyticsScalar {
@@ -102,6 +104,36 @@ export function normalizeAnalyticsDistinctId(value: unknown): string | null {
 
   const normalized = value.trim();
   if (!normalized || normalized.length > MAX_ANALYTICS_DISTINCT_ID_LENGTH) {
+    return null;
+  }
+
+  return normalized;
+}
+
+export function normalizeAnalyticsSessionId(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.trim();
+  if (!normalized || normalized.length > MAX_ANALYTICS_SESSION_ID_LENGTH) {
+    return null;
+  }
+
+  return normalized;
+}
+
+export function normalizeAnalyticsCurrentUrl(value: unknown): string | null {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.trim();
+  if (!normalized || normalized.length > MAX_ANALYTICS_URL_LENGTH) {
+    return null;
+  }
+
+  if (!URL.canParse(normalized)) {
     return null;
   }
 

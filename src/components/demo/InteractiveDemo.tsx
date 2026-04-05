@@ -9,6 +9,10 @@ import { DemoTimeline } from "@/components/demo/DemoTimeline";
 import { ExtractionCards } from "@/components/demo/ExtractionCards";
 import { LiveTranscript } from "@/components/demo/LiveTranscript";
 import { VoiceOrb } from "@/components/demo/VoiceOrb";
+import {
+  getAnalyticsDistinctId,
+  getAnalyticsSessionId,
+} from "@/lib/analytics/client";
 import { demoAudioLevels } from "@/lib/demoAudioLevels";
 import { getOrCreateDemoSessionId } from "@/lib/demoSession";
 import {
@@ -292,11 +296,17 @@ export function InteractiveDemo({
 
     const sessionId = sessionIdRef.current || getOrCreateDemoSessionId();
     sessionIdRef.current = sessionId;
+    const analyticsDistinctId = getAnalyticsDistinctId();
+    const analyticsSessionId = getAnalyticsSessionId();
+    const currentUrl = window.location.href || null;
 
     void fetch("/api/demo-engagement", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        analyticsDistinctId,
+        analyticsSessionId,
+        currentUrl,
         sessionId,
         ...patch,
       }),

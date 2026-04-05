@@ -8,6 +8,11 @@ import type {
   AnalyticsPayload,
   ServerAnalyticsEvent,
 } from "@/lib/analytics/shared";
+import {
+  normalizeAnalyticsCurrentUrl,
+  normalizeAnalyticsDistinctId,
+  normalizeAnalyticsSessionId,
+} from "@/lib/analytics/shared";
 import { isDemoScenarioSlug } from "@/lib/demoScenarios";
 
 const SESSION_ID_REGEX = /^[a-zA-Z0-9-]{8,120}$/;
@@ -39,6 +44,9 @@ type DemoEngagementEventType =
   | "cta_clicked";
 
 type DemoEngagementPayload = {
+  analyticsDistinctId: string | null;
+  analyticsSessionId: string | null;
+  currentUrl: string | null;
   sessionId: string;
   scenario: string;
   demoCompleted: boolean | undefined;
@@ -114,6 +122,9 @@ function normalizeDemoEngagementPayload(
   body: Record<string, unknown>,
 ): DemoEngagementPayload {
   return {
+    analyticsDistinctId: normalizeAnalyticsDistinctId(body.analyticsDistinctId),
+    analyticsSessionId: normalizeAnalyticsSessionId(body.analyticsSessionId),
+    currentUrl: normalizeAnalyticsCurrentUrl(body.currentUrl),
     sessionId: normalizeText(body.sessionId),
     scenario: normalizeText(body.scenario),
     demoCompleted: normalizeBoolean(body.demoCompleted),
@@ -440,9 +451,11 @@ export async function POST(request: Request): Promise<NextResponse> {
     await Promise.allSettled(
       analyticsEvents.map((analyticsEvent) =>
         captureServerAnalyticsEvent({
-          distinctId: payload.sessionId,
+          currentUrl: payload.currentUrl,
+          distinctId: payload.analyticsDistinctId ?? payload.sessionId,
           event: analyticsEvent.event,
           properties: analyticsEvent.properties,
+          sessionId: payload.analyticsSessionId,
           siteHost,
         }),
       ),

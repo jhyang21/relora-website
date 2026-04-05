@@ -14,10 +14,16 @@ let posthogClient: PostHog | null = null;
 function buildServerAnalyticsProperties(
   siteHost: string | undefined,
   properties: AnalyticsPayload | undefined,
+  sessionId: string | null | undefined,
+  currentUrl: string | null | undefined,
 ): AnalyticsPayload {
   return {
     ...buildBaseAnalyticsProperties(siteHost),
     ...sanitizeAnalyticsPayload(properties),
+    ...sanitizeAnalyticsPayload({
+      $current_url: currentUrl ?? null,
+      $session_id: sessionId ?? null,
+    }),
   };
 }
 
@@ -50,6 +56,8 @@ export async function captureServerAnalyticsEvent(params: {
   distinctId: string | null;
   event: ServerAnalyticsEvent;
   properties?: AnalyticsPayload;
+  currentUrl?: string | null;
+  sessionId?: string | null;
   siteHost?: string;
 }): Promise<void> {
   if (!params.distinctId) {
@@ -64,6 +72,11 @@ export async function captureServerAnalyticsEvent(params: {
   await client.captureImmediate({
     distinctId: params.distinctId,
     event: params.event,
-    properties: buildServerAnalyticsProperties(params.siteHost, params.properties),
+    properties: buildServerAnalyticsProperties(
+      params.siteHost,
+      params.properties,
+      params.sessionId,
+      params.currentUrl,
+    ),
   });
 }

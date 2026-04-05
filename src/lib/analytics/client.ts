@@ -2,12 +2,13 @@
 
 import posthog, { type PostHogInterface } from "posthog-js";
 import {
-  type ClientAnalyticsEvent,
   type AnalyticsPayload,
+  type ClientAnalyticsEvent,
   buildBrowserAnalyticsProperties,
   getAnalyticsEnabled,
   isSensitiveAnalyticsPath,
   normalizeAnalyticsDistinctId,
+  normalizeAnalyticsSessionId,
   sanitizeAnalyticsPayload,
 } from "@/lib/analytics/shared";
 
@@ -124,4 +125,13 @@ export function getAnalyticsDistinctId(): string | null {
   }
 
   return normalizeAnalyticsDistinctId(analyticsClient.get_distinct_id());
+}
+
+export function getAnalyticsSessionId(): string | null {
+  const analyticsClient = getAnalyticsClient();
+  if (!analyticsClient) {
+    return null;
+  }
+
+  return normalizeAnalyticsSessionId(analyticsClient.get_session_id());
 }
