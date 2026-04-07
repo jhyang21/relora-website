@@ -13,6 +13,7 @@ type LiveTranscriptProps = {
   recordingElapsedMs: number;
   recordingMs: number;
   highlightsReady: boolean;
+  showSoundToggle: boolean;
   isSoundEnabled: boolean;
   onToggleSound: () => void;
   isExiting: boolean;
@@ -236,6 +237,7 @@ export function LiveTranscript({
   recordingElapsedMs,
   recordingMs,
   highlightsReady,
+  showSoundToggle,
   isSoundEnabled,
   onToggleSound,
   isExiting,
@@ -267,14 +269,16 @@ export function LiveTranscript({
           <p className="mt-1 break-words text-sm font-medium text-[var(--color-ink)]">{scenarioLabel}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-          <button
-            type="button"
-            onClick={onToggleSound}
-            aria-pressed={isSoundEnabled}
-            className={getSoundToggleClassName(isSoundEnabled)}
-          >
-            {isSoundEnabled ? "Sound on" : "Sound off"}
-          </button>
+          {showSoundToggle ? (
+            <button
+              type="button"
+              onClick={onToggleSound}
+              aria-pressed={isSoundEnabled}
+              className={getSoundToggleClassName(isSoundEnabled)}
+            >
+              {isSoundEnabled ? "Sound on" : "Sound off"}
+            </button>
+          ) : null}
           {showHighlights ? (
             <span className="rounded-full bg-[var(--color-secondary-tint)] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--color-secondary)]">
               Captured

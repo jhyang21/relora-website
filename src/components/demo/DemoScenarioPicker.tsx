@@ -8,13 +8,28 @@ type DemoScenarioPickerProps = {
   scenarios: DemoScenario[];
   selectedSlug: DemoScenarioSlug | null;
   isBusy: boolean;
+  guidedTapSlug: DemoScenarioSlug | null;
+  guidedTapKey: number;
   onSelect: (slug: DemoScenarioSlug) => void;
+};
+
+type PickerAnimation = {
+  scale?: number | number[];
+  y: number | number[];
 };
 
 function getPickerAnimation(
   index: number,
   isSelected: boolean,
-): { y: number | number[] } {
+  isGuidedTapTarget: boolean,
+): PickerAnimation {
+  if (isGuidedTapTarget) {
+    return {
+      scale: [1, 1.035, 0.965, 1.02, 1],
+      y: [0, -8, 4, -2, 0],
+    };
+  }
+
   if (isSelected) {
     return { y: -2 };
   }
@@ -29,11 +44,16 @@ function getPickerAnimation(
 function getPickerTransition(
   index: number,
   isSelected: boolean,
+  isGuidedTapTarget: boolean,
 ): {
   duration: number;
   ease: "easeInOut";
   repeat?: number;
 } {
+  if (isGuidedTapTarget) {
+    return { duration: 0.45, ease: "easeInOut" };
+  }
+
   if (isSelected) {
     return { duration: 0.18, ease: "easeInOut" };
   }
@@ -73,6 +93,8 @@ export function DemoScenarioPicker({
   scenarios,
   selectedSlug,
   isBusy,
+  guidedTapSlug,
+  guidedTapKey,
   onSelect,
 }: DemoScenarioPickerProps): JSX.Element {
   return (
@@ -81,16 +103,18 @@ export function DemoScenarioPicker({
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         {scenarios.map((scenario, index) => {
           const isSelected = selectedSlug === scenario.slug;
+          const isGuidedTapTarget = guidedTapSlug === scenario.slug;
+          const buttonKey = isGuidedTapTarget ? `${scenario.slug}-${guidedTapKey}` : scenario.slug;
 
           return (
             <motion.button
-              key={scenario.slug}
+              key={buttonKey}
               type="button"
               aria-pressed={isSelected}
               whileHover={isBusy ? undefined : { y: -4, scale: 1.01 }}
               whileTap={isBusy ? undefined : { y: -1, scale: 0.985 }}
-              animate={getPickerAnimation(index, isSelected)}
-              transition={getPickerTransition(index, isSelected)}
+              animate={getPickerAnimation(index, isSelected, isGuidedTapTarget)}
+              transition={getPickerTransition(index, isSelected, isGuidedTapTarget)}
               disabled={isBusy}
               onClick={() => onSelect(scenario.slug)}
               className={getPickerClassName(isSelected, isBusy)}

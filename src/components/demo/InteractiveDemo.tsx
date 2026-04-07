@@ -51,8 +51,11 @@ type ScenarioTimeline = {
 };
 
 const FALLBACK_SCENARIO_SLUG: DemoScenarioSlug = "real-estate";
+const DEFAULT_ORB_SCENARIO_SLUG: DemoScenarioSlug = "real-estate";
+const GUIDED_TAP_DELAY_MS = 180;
 const RECORDING_TICK_MS = 90;
 const KEY_THING_STEP_DELAY_MS = 420;
+const MOBILE_MEDIA_QUERY = "(max-width: 767px)";
 const SOUND_ENABLED_STORAGE_KEY = "relora-demo-sound-enabled";
 
 const DEFAULT_VISIBLE_CARDS: VisibleCards = {
@@ -111,6 +114,14 @@ function isScenarioPickerDisabled(
 
 function getRecordingDurationMs(scenario: DemoScenario): number {
   return scenario.audio.durationMs;
+}
+
+function isMobileViewport(): boolean {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return false;
+  }
+
+  return window.matchMedia(MOBILE_MEDIA_QUERY).matches;
 }
 
 function getStoredSoundEnabled(): boolean {
@@ -241,6 +252,7 @@ export function InteractiveDemo({
   const reduceMotion = useReducedMotion();
   const demoRootRef = useRef<HTMLDivElement | null>(null);
   const phaseTimeoutsRef = useRef<number[]>([]);
+  const guidedTapTimeoutRef = useRef<number | null>(null);
   const sessionIdRef = useRef("");
   const completedScenarioSlugsRef = useRef<Set<DemoScenarioSlug>>(new Set());
   const audioMapRef = useRef<ScenarioAudioMap>({});
@@ -252,6 +264,10 @@ export function InteractiveDemo({
   const [visibleCards, setVisibleCards] = useState<VisibleCards>(DEFAULT_VISIBLE_CARDS);
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [highlightsReady, setHighlightsReady] = useState(false);
+  const [guidedTapSlug, setGuidedTapSlug] = useState<DemoScenarioSlug | null>(null);
+  const [guidedTapKey, setGuidedTapKey] = useState(0);
+  const [isGuidedTapPending, setIsGuidedTapPending] = useState(false);
+  const [isMobile, setIsMobile] = useState<boolean>(isMobileViewport);
   const [isSoundEnabled, setIsSoundEnabled] = useState<boolean>(getStoredSoundEnabled);
   const [isExiting, setIsExiting] = useState(false);
 
@@ -260,11 +276,21 @@ export function InteractiveDemo({
   const displayScenario = selectedScenario ?? fallbackScenario;
   const audioLevels = demoAudioLevels[displayScenario.slug];
   const recordingMs = getRecordingDurationMs(displayScenario);
-  const isPickerDisabled = isScenarioPickerDisabled(phase, highlightsReady);
+  const isPickerDisabled = isScenarioPickerDisabled(phase, highlightsReady) || isGuidedTapPending;
 
   const clearPhaseTimers = useCallback(function clearPhaseTimers(): void {
     phaseTimeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
     phaseTimeoutsRef.current = [];
+  }, []);
+
+  const clearGuidedTap = useCallback(function clearGuidedTap(): void {
+    if (guidedTapTimeoutRef.current !== null) {
+      window.clearTimeout(guidedTapTimeoutRef.current);
+      guidedTapTimeoutRef.current = null;
+    }
+
+    setGuidedTapSlug(null);
+    setIsGuidedTapPending(false);
   }, []);
 
   const stopCurrentAudio = useCallback(function stopCurrentAudio(): void {
@@ -275,6 +301,7 @@ export function InteractiveDemo({
   const showCompletedScenario = useCallback(
     function showCompletedScenario(scenario: DemoScenario): void {
       clearPhaseTimers();
+      clearGuidedTap();
       stopCurrentAudio();
       setSelectedSlug(scenario.slug);
       setPhase("complete");
@@ -284,7 +311,7 @@ export function InteractiveDemo({
       setHighlightsReady(true);
       setIsExiting(false);
     },
-    [clearPhaseTimers, stopCurrentAudio],
+    [clearGuidedTap, clearPhaseTimers, stopCurrentAudio],
   );
 
   const postEngagement = useCallback(function postEngagement(
@@ -349,9 +376,36 @@ export function InteractiveDemo({
   }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return;
+    }
+
+    const mediaQueryList = window.matchMedia(MOBILE_MEDIA_QUERY);
+
+    function handleViewportChange(): void {
+      setIsMobile(mediaQueryList.matches);
+    }
+
+    handleViewportChange();
+    mediaQueryList.addEventListener("change", handleViewportChange);
+
+    return () => {
+      mediaQueryList.removeEventListener("change", handleViewportChange);
+    };
+  }, []);
+
+  useEffect(() => {
     storeSoundEnabled(isSoundEnabled);
     syncScenarioAudioMuteState(audioMapRef.current, isSoundEnabled);
   }, [isSoundEnabled]);
+
+  useEffect(() => {
+    if (!isMobile) {
+      return;
+    }
+
+    stopCurrentAudio();
+  }, [isMobile, stopCurrentAudio]);
 
   useEffect(() => {
     if (!selectedScenario || phase !== "recording") {
@@ -371,9 +425,10 @@ export function InteractiveDemo({
   useEffect(() => {
     return () => {
       clearPhaseTimers();
+      clearGuidedTap();
       stopCurrentAudio();
     };
-  }, [clearPhaseTimers, stopCurrentAudio]);
+  }, [clearGuidedTap, clearPhaseTimers, stopCurrentAudio]);
 
   const getScenarioAudio = useCallback(
     function getScenarioAudio(scenario: DemoScenario): HTMLAudioElement {
@@ -384,6 +439,11 @@ export function InteractiveDemo({
 
   const playScenarioAudio = useCallback(
     function playScenarioAudio(scenario: DemoScenario): void {
+      if (isMobile) {
+        stopCurrentAudio();
+        return;
+      }
+
       stopCurrentAudio();
 
       const audioElement = getScenarioAudio(scenario);
@@ -395,7 +455,7 @@ export function InteractiveDemo({
         void playback.catch(() => undefined);
       }
     },
-    [getScenarioAudio, isSoundEnabled, stopCurrentAudio],
+    [getScenarioAudio, isMobile, isSoundEnabled, stopCurrentAudio],
   );
 
   const startScenario = useCallback(
@@ -406,6 +466,7 @@ export function InteractiveDemo({
       const hasReplayHistory = completedScenarioSlugsRef.current.size > 0;
 
       clearPhaseTimers();
+      clearGuidedTap();
       stopCurrentAudio();
       playScenarioAudio(scenario);
       setSelectedSlug(slug);
@@ -487,6 +548,7 @@ export function InteractiveDemo({
       ];
     },
     [
+      clearGuidedTap,
       clearPhaseTimers,
       playScenarioAudio,
       postEngagement,
@@ -515,12 +577,8 @@ export function InteractiveDemo({
     setIsSoundEnabled((current) => !current);
   }, []);
 
-  const handleScenarioSelect = useCallback(
-    function handleScenarioSelect(slug: DemoScenarioSlug): void {
-      if (isPickerDisabled) {
-        return;
-      }
-
+  const selectScenario = useCallback(
+    function selectScenario(slug: DemoScenarioSlug): void {
       if (hasScenarioCompleted(completedScenarioSlugsRef.current, slug)) {
         trackDemoReplay(slug);
         showCompletedScenario(demoScenarioMap[slug]);
@@ -529,8 +587,41 @@ export function InteractiveDemo({
 
       startScenario(slug);
     },
-    [isPickerDisabled, showCompletedScenario, startScenario, trackDemoReplay],
+    [showCompletedScenario, startScenario, trackDemoReplay],
   );
+
+  const handleScenarioSelect = useCallback(
+    function handleScenarioSelect(slug: DemoScenarioSlug): void {
+      if (isPickerDisabled) {
+        return;
+      }
+
+      selectScenario(slug);
+    },
+    [isPickerDisabled, selectScenario],
+  );
+
+  const handleVoiceOrbPress = useCallback(function handleVoiceOrbPress(): void {
+    if (isPickerDisabled) {
+      return;
+    }
+
+    const reducedMotionEnabled = getEffectiveReducedMotionPreference(reduceMotion);
+    if (reducedMotionEnabled) {
+      selectScenario(DEFAULT_ORB_SCENARIO_SLUG);
+      return;
+    }
+
+    clearGuidedTap();
+    setIsGuidedTapPending(true);
+    setGuidedTapSlug(DEFAULT_ORB_SCENARIO_SLUG);
+    setGuidedTapKey((current) => current + 1);
+
+    guidedTapTimeoutRef.current = window.setTimeout(() => {
+      guidedTapTimeoutRef.current = null;
+      selectScenario(DEFAULT_ORB_SCENARIO_SLUG);
+    }, GUIDED_TAP_DELAY_MS);
+  }, [clearGuidedTap, isPickerDisabled, reduceMotion, selectScenario]);
 
   return (
     <div ref={demoRootRef} className="min-w-0 space-y-6" aria-labelledby="demo-heading">
@@ -538,6 +629,8 @@ export function InteractiveDemo({
         scenarios={demoScenarios}
         selectedSlug={selectedSlug}
         isBusy={isPickerDisabled}
+        guidedTapSlug={guidedTapSlug}
+        guidedTapKey={guidedTapKey}
         onSelect={handleScenarioSelect}
       />
       <p className="text-sm text-[var(--color-muted)]">
@@ -551,6 +644,8 @@ export function InteractiveDemo({
             audioLevels={audioLevels}
             recordingElapsedMs={recordingElapsedMs}
             recordingMs={recordingMs}
+            onPress={handleVoiceOrbPress}
+            isDisabled={isPickerDisabled}
           />
           <DemoTimeline phase={phase} />
           <LiveTranscript
@@ -561,6 +656,7 @@ export function InteractiveDemo({
             recordingElapsedMs={recordingElapsedMs}
             recordingMs={recordingMs}
             highlightsReady={highlightsReady}
+            showSoundToggle={!isMobile}
             isSoundEnabled={isSoundEnabled}
             onToggleSound={handleSoundToggle}
             isExiting={isExiting}
