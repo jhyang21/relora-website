@@ -9,6 +9,8 @@ type VoiceOrbProps = {
   audioLevels: number[];
   recordingElapsedMs: number;
   recordingMs: number;
+  onPress: () => void;
+  isDisabled: boolean;
 };
 
 function getLevelIndex(
@@ -78,9 +80,9 @@ function getCoreScale(
 function getVoiceStatusLabel(phase: VoiceOrbProps["phase"]): string | null {
   switch (phase) {
     case "idle":
-      return "Ready to simulate";
+      return "Sample ready";
     case "recording":
-      return "Listening";
+      return "Playing sample note";
     case "processing":
       return "Extracting details";
     default:
@@ -88,11 +90,21 @@ function getVoiceStatusLabel(phase: VoiceOrbProps["phase"]): string | null {
   }
 }
 
+function getOrbButtonClassName(isDisabled: boolean): string {
+  if (isDisabled) {
+    return "group flex flex-col items-center rounded-[2rem] bg-transparent p-1 text-left transition-opacity duration-200 disabled:cursor-not-allowed disabled:opacity-75";
+  }
+
+  return "group flex flex-col items-center rounded-[2rem] bg-transparent p-1 text-left transition-[transform,opacity] duration-200 hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]/50 focus-visible:ring-offset-4 focus-visible:ring-offset-[var(--color-paper)]";
+}
+
 export function VoiceOrb({
   phase,
   audioLevels,
   recordingElapsedMs,
   recordingMs,
+  onPress,
+  isDisabled,
 }: VoiceOrbProps): JSX.Element {
   const levelIndex = getLevelIndex(phase, audioLevels, recordingElapsedMs, recordingMs);
   const level = phase === "recording" ? audioLevels[levelIndex] ?? 0.2 : 0.22;
@@ -101,7 +113,13 @@ export function VoiceOrb({
   const statusLabel = getVoiceStatusLabel(phase);
 
   return (
-    <div className="flex flex-col items-center">
+    <button
+      type="button"
+      onClick={onPress}
+      disabled={isDisabled}
+      className={getOrbButtonClassName(isDisabled)}
+      aria-label="Play the real estate sample scenario"
+    >
       <div
         className={`relative mx-auto flex items-center justify-center rounded-full transition-[width,height] duration-300 ${getOrbSizeClassName(isActive)}`}
       >
@@ -159,6 +177,6 @@ export function VoiceOrb({
           {statusLabel}
         </p>
       ) : null}
-    </div>
+    </button>
   );
 }

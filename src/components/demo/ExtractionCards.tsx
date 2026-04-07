@@ -61,16 +61,16 @@ function getPlaceholderCardCopy(
       eyebrow: "Extraction preview",
       title: "The structured notes land here",
       body:
-        "Once the transcript finishes, Relora turns it into a subject card, a clean memory draft, key details, and a suggested follow-up reminder.",
+        "Once the sample note finishes, Relora turns it into a subject card, a clean memory draft, key details, and a suggested follow-up reminder.",
     };
   }
 
   if (phase === "recording") {
     return {
       eyebrow: "Extraction pending",
-      title: "Listening for signal",
+      title: "Preparing extracted details",
       body:
-        "The transcript is still arriving. As soon as the note is complete, the structured cards will materialize in this column.",
+        "The sample note is still playing. As soon as it finishes, the structured cards will appear in this column.",
     };
   }
 
