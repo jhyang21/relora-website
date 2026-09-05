@@ -4,9 +4,9 @@ export const siteConfig = {
   name: "Relora",
   creator: "immForm, Inc.",
   url: "https://www.reloraapp.com",
-  title: "Relora | Personal relationship memory app",
+  title: "Relora | Client relationship memory for professionals",
   description:
-    "Relora turns quick voice notes into structured context tied to contacts so you can remember the small details that build relationships.",
+    "Relora turns quick voice notes into structured context tied to contacts so you remember the details that win client relationships.",
   contactEmail: "contact@immform.com",
   linkedInUrl: "https://www.linkedin.com/in/junhyeok-andrew-yang/",
 } as const;

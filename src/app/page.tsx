@@ -10,7 +10,7 @@ import { buildPageMetadata } from "@/lib/site";
 const howItWorks = [
   {
     title: "Capture",
-    body: "Record a quick voice note after meeting or talking to someone.",
+    body: "Record a quick voice note after any client interaction — a call, a coffee, or a chance run-in.",
   },
   {
     title: "Organize",
@@ -18,7 +18,7 @@ const howItWorks = [
   },
   {
     title: "Surface",
-    body: "Get context before calls, meetings, or events so you are prepared.",
+    body: "Get context before client calls, meetings, or follow-ups so you never miss a beat.",
   },
 ];
 
@@ -26,7 +26,7 @@ const useCases = [
   "Real estate agents and brokers",
   "Lawyers and legal professionals",
   "Financial advisors",
-  "Friends and family",
+  "Sales and business development",
 ];
 
 export const metadata: Metadata = buildPageMetadata();
@@ -42,10 +42,10 @@ export default function HomePage(): JSX.Element {
               Relora waitlist
             </p>
             <h1 className="mt-4 max-w-full font-serif text-4xl leading-[1.05] text-[var(--color-ink)] sm:max-w-[14ch] sm:text-5xl md:text-6xl">
-              Remember the small details that build relationships.
+              Remember the details that win client relationships.
             </h1>
             <p className="mt-5 max-w-[56ch] text-lg leading-8 text-[var(--color-muted)]">
-              Relora turns quick voice notes into structured context tied to contacts, so you are ready for every conversation.
+              Relora turns quick voice notes into structured context tied to contacts, so you show up prepared for every client interaction.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <SmoothScrollLink

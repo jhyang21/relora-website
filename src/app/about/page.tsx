@@ -33,8 +33,8 @@ export default function AboutPage() {
                 Building now
               </p>
               <p className="mt-2 text-base text-[var(--color-ink)]">
-                Relora, a personal relationship memory app that helps you remember the details that
-                keep connections warm.
+                Relora, a client relationship memory app that helps professionals remember the details
+                that build stronger client relationships.
               </p>
             </Card>
           </div>

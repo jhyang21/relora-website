@@ -6,7 +6,7 @@ export function GET(): Response {
   const body = [
     `# ${siteConfig.name}`,
     "",
-    "> Relora is a personal CRM for remembering the small details that matter for building personal relationships in a professional context. It turns quick voice notes into structured context tied to contacts.",
+    "> Client relationship memory for professionals. Turns quick voice notes into structured context tied to contacts so you show up prepared with every client.",
     "",
     "## Canonical site",
     `- ${siteConfig.url}`,

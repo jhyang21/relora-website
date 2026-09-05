@@ -29,7 +29,7 @@ const TOTAL_STEPS = 6;
 const OTHER_IDENTITY_OPTION = "Other";
 const MAX_IDENTITY_OTHER_LENGTH = 120;
 const shareIntentUrl = `https://x.com/intent/post?text=${encodeURIComponent(
-  `I just joined the Relora waitlist for better personal relationship memory, developed by @andrewyang_X. Join the waitlist with me at ${siteConfig.url}`,
+  `I just joined the Relora waitlist: client relationship memory for professionals, by @andrewyang_X. Join me at ${siteConfig.url}`,
 )}`;
 
 function isValidEmail(email: string): boolean {
