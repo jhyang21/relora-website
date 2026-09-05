@@ -39,7 +39,7 @@ export function HomeInteractiveSections({
       </div>
 
       <section className="mt-24 md:mt-28">
-        <h2 className="font-serif text-3xl text-[var(--color-ink)]">Built for everyday relationships</h2>
+        <h2 className="font-serif text-3xl text-[var(--color-ink)]">Built for work that runs on relationships</h2>
         <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
           {useCases.map((useCase) => (
             <Card key={useCase}>

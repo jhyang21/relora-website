@@ -1,6 +1,6 @@
-# Relora Personal Site
+# Relora marketing site
 
-Waitlist-first personal site for Relora, with a separate About Andrew page.
+Waitlist-first marketing site for Relora, with a separate About Andrew page.
 
 ## Routes
 
