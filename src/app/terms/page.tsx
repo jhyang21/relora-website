@@ -71,9 +71,9 @@ export default function TermsPage(): JSX.Element {
           order to disguise the origin of any access to the App.
         </p>
         <p className="mt-4 leading-7 text-[var(--color-ink)]">
-          The App is for your personal and noncommercial use. You may not modify, copy, distribute, transmit, display,
-          perform, reproduce, publish, license, create derivative works from, transfer, or sell for any commercial
-          purposes any portion of the App, use of the App, or access to the App.
+          The App is for your own use, in your work or otherwise. You may not resell it, and you may not modify, copy,
+          distribute, transmit, display, perform, reproduce, publish, license, create derivative works from, transfer,
+          or sell any portion of the App, use of the App, or access to the App.
         </p>
 
         <h2 className="mt-10 font-serif text-2xl text-[var(--color-ink)]">Electronic Communications</h2>
