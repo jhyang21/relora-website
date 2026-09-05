@@ -6,7 +6,7 @@ export function GET(): Response {
   const body = [
     `# ${siteConfig.name}`,
     "",
-    "> Client relationship memory for professionals. Turns quick voice notes into structured context tied to contacts so you show up prepared with every client.",
+    `> ${siteConfig.description}`,
     "",
     "## Canonical site",
     `- ${siteConfig.url}`,

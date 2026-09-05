@@ -6,27 +6,13 @@ Marketing/waitlist site for Relora. Next.js 16 App Router, Tailwind v4, raw SQL 
 
 ## Commands
 
-```bash
-npm install
-npm run dev          # localhost:3000
-npm run build
-npm run lint
-
-# API tests (require dev server running)
-npm run test:api:waitlist
-npm run test:api:request-data
-```
-
-Override test target: `WAITLIST_API_BASE_URL=http://...`
+Scripts live in `package.json`. The one thing they do not say: override the API tests' target with `WAITLIST_API_BASE_URL=http://...`
 
 ---
 
 ## Toolchain
 
-- **npm** — never pnpm or yarn
-- **Next.js 16** App Router (`src/app/`)
 - **Tailwind v4** — CSS-first config in `globals.css` (`@theme inline`), no `tailwind.config.*`
-- **TypeScript** strict, path alias `@/*` → `src/*`
 - **`postgres`** npm package (not `pg`, not Prisma, not Drizzle) — raw tagged-template SQL
 - **Resend** for transactional email
 - **PostHog** for analytics (client + server)
@@ -53,7 +39,6 @@ All POST-only:
 | `POST /api/waitlist` | Waitlist signup — upserts, sends notification email |
 | `POST /api/request-data` | GDPR/CCPA data request — inserts with status='pending' |
 | `POST /api/demo-engagement` | Demo interaction logging — monotonic field accumulation |
-| `GET /llms.txt` | Static plain-text for LLM crawlers |
 
 - Both waitlist and request-data use **honeypot fields** (`company` / `website`) — non-empty = silent 200, no DB write
 - Notification emails go to hardcoded `andrew@immform.com` (not env var)
@@ -78,7 +63,7 @@ Use `.env.local` for local dev.
 ## Key Patterns
 
 - Fonts: Inter (sans) + Fraunces (serif headings) via `next/font/google`
-- Design tokens as CSS custom properties in `globals.css`, mapped to Tailwind via `@theme inline`
+- Design tokens as CSS custom properties in `globals.css`
 - `/request-data` suppresses PostHog autocapture + session recording (privacy-sensitive)
 - `www.reloraapp.com` is canonical — `next.config.ts` redirects bare domain
 - Tests are plain Node.js scripts (`scripts/`), no test framework — they `fetch()` against a running server
