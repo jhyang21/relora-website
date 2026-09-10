@@ -15,7 +15,7 @@ export default function TermsPage(): JSX.Element {
       <SiteNav current="home" />
       <main className="mx-auto max-w-3xl break-words px-6 py-12 md:px-10">
         <h1 className="font-serif text-4xl text-[var(--color-ink)]">Terms of Use</h1>
-        <p className="mt-2 text-sm text-[var(--color-muted)]">Last updated March 13, 2026</p>
+        <p className="mt-2 text-sm text-[var(--color-muted)]">Last updated September 10, 2026</p>
 
         <p className="mt-6 leading-7 text-[var(--color-ink)]">
           The Relora site and the mobile applications and services available in connection with this site and mobile
@@ -179,12 +179,25 @@ export default function TermsPage(): JSX.Element {
 
         <h2 className="mt-10 font-serif text-2xl text-[var(--color-ink)]">Subscription Payments, Renewals, and Cancellations</h2>
 
+        <p className="mt-4 leading-7 text-[var(--color-ink)]">Relora offers three plans:</p>
+        <ul className="mt-3 list-disc space-y-2 pl-6 leading-7 text-[var(--color-ink)]">
+          <li><strong>Free</strong> — 5 voice notes total per account, up to 1 minute each.</li>
+          <li><strong>Relora Plus</strong> — $4.99 a month, 100 voice notes a month, up to 1 minute each.</li>
+          <li><strong>Relora Pro</strong> — $19.99 a month, unlimited voice notes up to 5 minutes each. If your Apple
+            ID has not used a trial in the Relora subscription group before, you get a 7-day free trial.</li>
+        </ul>
+        <p className="mt-4 leading-7 text-[var(--color-ink)]">
+          Apple bills all subscriptions through the App Store. Prices are in US dollars; local prices may differ. Each
+          plan renews automatically each month at the same price until you cancel at least 24 hours before the end of
+          the current period. Manage or cancel your subscription in your Apple Account subscription settings.
+        </p>
+
         <h3 className="mt-6 text-base font-semibold text-[var(--color-ink)]">Month to month</h3>
         <p className="mt-2 leading-7 text-[var(--color-ink)]">
           Your subscription begins as soon as you have signed up for the subscribed services and your initial payment
           is processed. Your subscription will automatically renew each month without notice until you cancel. We will
           automatically charge you the applicable rate for your plan, plus applicable taxes, every month upon renewal
-          until you cancel. The payment method provided will automatically be charged unless you cancel 48 hours in
+          until you cancel. The payment method provided will automatically be charged unless you cancel 24 hours in
           advance.
         </p>
         <p className="mt-4 leading-7 text-[var(--color-ink)]">
@@ -197,7 +210,7 @@ export default function TermsPage(): JSX.Element {
         <p className="mt-2 leading-7 text-[var(--color-ink)]">
           We reserve the right to modify or terminate free trial offers at any time and for any reason. At the
           conclusion of the free trial period, you will automatically be charged the then-current subscription price
-          unless you cancel 48 hours in advance.
+          unless you cancel 24 hours in advance.
         </p>
 
         <h3 className="mt-6 text-base font-semibold text-[var(--color-ink)]">For European Economic Area customers</h3>

@@ -15,7 +15,7 @@ export default function PrivacyPage(): JSX.Element {
       <SiteNav current="home" />
       <main className="mx-auto max-w-3xl break-words px-6 py-12 md:px-10">
         <h1 className="font-serif text-4xl text-[var(--color-ink)]">Privacy Policy</h1>
-        <p className="mt-2 text-sm text-[var(--color-muted)]">Last updated April 4, 2026</p>
+        <p className="mt-2 text-sm text-[var(--color-muted)]">Last updated September 10, 2026</p>
 
         <p className="mt-6 leading-7 text-[var(--color-ink)]">
           This Privacy Notice for <strong>immForm, Inc.</strong> ("we," "us," or "our") describes how and why we might
@@ -218,6 +218,13 @@ export default function PrivacyPage(): JSX.Element {
           to enable your use of our AI Products. You must not use the AI Products in any way that violates the terms or
           policies of any AI Service Provider.
         </p>
+        <p className="mt-4 leading-7 text-[var(--color-ink)]">
+          When you record a voice note, your phone streams the audio straight to OpenAI over an encrypted connection,
+          using a short-lived credential our server issues for that session. If a live connection is not available, the
+          app instead uploads the finished recording to our server, which forwards it to OpenAI. OpenAI uses the audio
+          only to return a text transcript, does not use it to train its models, and may keep it for up to 30 days to
+          watch for abuse.
+        </p>
         <h3 className="mt-6 text-base font-semibold text-[var(--color-ink)]">Our AI Products</h3>
         <ul className="mt-3 list-disc space-y-1 pl-6 leading-7 text-[var(--color-ink)]">
           <li>Text analysis</li>
@@ -244,6 +251,16 @@ export default function PrivacyPage(): JSX.Element {
           or anonymize such information, or, if not possible, securely store your personal information and isolate it
           from any further processing until deletion is possible.
         </p>
+        <p className="mt-4 leading-7 text-[var(--color-ink)]">
+          For voice notes, the concrete rules are:
+        </p>
+        <ul className="mt-3 list-disc space-y-1 pl-6 leading-7 text-[var(--color-ink)]">
+          <li>We do not store your voice audio. The recording stays on your phone.</li>
+          <li>Records of a transcription job on our server are deleted within 24 hours.</li>
+          <li>A saved note keeps its transcript and derived text until you delete the note or your account.</li>
+          <li>Deleting your account in the app removes the account, all synced data, and your customer record at our
+            billing processor, RevenueCat.</li>
+        </ul>
 
         {/* Section 7 */}
         <h2 id="infosafe" className="mt-10 font-serif text-2xl text-[var(--color-ink)]">7. How Do We Keep Your Information Safe?</h2>
