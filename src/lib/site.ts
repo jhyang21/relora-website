@@ -9,6 +9,7 @@ export const siteConfig = {
     "Relora turns quick voice notes into structured context tied to contacts so you remember the details that win client relationships.",
   contactEmail: "contact@immform.com",
   linkedInUrl: "https://www.linkedin.com/in/junhyeok-andrew-yang/",
+  appStoreUrl: "https://apps.apple.com/app/id6761505803",
 } as const;
 
 const defaultRobots: Metadata["robots"] = {
