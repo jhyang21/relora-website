@@ -77,7 +77,7 @@ export default function HomePage(): JSX.Element {
             </div>
             <div className="mt-4 space-y-1 text-sm text-[var(--color-muted)]">
               <p>Free for 7 days, then $19.99 a month. iPhone, iOS 17 or later.</p>
-              <p>Voice notes go to OpenAI for transcription and drafting.</p>
+              <p>Voice notes are sent to OpenAI for transcription and note extraction. OpenAI does not use them to train its models.</p>
             </div>
           </div>
           <MemoryCardStack />
