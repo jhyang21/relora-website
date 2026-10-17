@@ -4,7 +4,6 @@ import type { JSX } from "react";
 import { Card } from "@/components/Card";
 import { InteractiveDemoLoader } from "@/components/demo/InteractiveDemoLoader";
 import { SmoothScrollLink } from "@/components/SmoothScrollLink";
-import { WaitlistFlow } from "@/components/WaitlistFlow";
 import { appStoreLink } from "@/lib/site";
 
 type HomeInteractiveSectionsProps = {
@@ -48,14 +47,6 @@ export function HomeInteractiveSections({
             />
           </SmoothScrollLink>
         </div>
-      </section>
-
-      <section id="waitlist" className="mt-24 min-w-0 scroll-mt-6 md:mt-28">
-        <h2 className="font-serif text-3xl text-[var(--color-ink)]">Not on iPhone yet? Join the Android list</h2>
-        <p className="mt-2 mb-4 text-base text-[var(--color-muted)]">
-          Relora is iPhone-only today. Leave your email and you&apos;ll hear first when Android ships.
-        </p>
-        <WaitlistFlow />
       </section>
     </>
   );

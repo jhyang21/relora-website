@@ -1,15 +1,14 @@
 # Relora marketing site
 
-Waitlist-first marketing site for Relora, with a separate About Andrew page.
+Marketing site for Relora, an iPhone app. The home page links to the App Store and runs an interactive demo. The site also hosts a privacy request form and an About Andrew page.
 
 ## Routes
 
-- `/` - Relora waitlist landing page
+- `/` - App Store landing page with the interactive demo
 - `/about` - About Andrew
 - `/privacy` - privacy policy
 - `/terms` - terms of use
 - `/request-data` - privacy rights request form
-- `/api/waitlist` - waitlist submit endpoint
 - `/api/demo-engagement` - demo engagement logging endpoint
 - `/api/request-data` - privacy rights request submit endpoint
 
@@ -22,9 +21,9 @@ npm run dev
 
 Open `http://localhost:3000`.
 
-## Waitlist backend (Supabase Postgres)
+## Database (Supabase Postgres)
 
-The API route uses a direct Postgres connection and creates the `waitlist_signups` table automatically on first valid request.
+The API routes use a direct Postgres connection. Each route creates its tables on the first valid request.
 
 Required environment variable:
 
@@ -66,19 +65,8 @@ Behavior:
 - Automatic pageviews run on public routes.
 - Homepage and other public marketing routes allow autocapture and session replay.
 - `/request-data` disables autocapture and session replay in code.
-- Sensitive waitlist and request-data inputs are masked or excluded from replay/autocapture classes.
+- Sensitive request-data inputs are masked or excluded from replay/autocapture classes.
 - API outcome events are sent server-side with sanitized categorical props only. Emails, names, and free-text request content are not sent to PostHog.
-
-### Table schema
-
-```sql
-CREATE TABLE IF NOT EXISTS waitlist_signups (
-  id SERIAL PRIMARY KEY,
-  email TEXT UNIQUE NOT NULL,
-  intent TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-```
 
 ## Design system
 

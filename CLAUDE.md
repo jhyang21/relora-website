@@ -1,12 +1,12 @@
 # CLAUDE.md — Relora Website
 
-Marketing/waitlist site for Relora. Next.js 16 App Router, Tailwind v4, raw SQL via `postgres` library. Legal entity: **immForm, Inc.**
+Marketing site for Relora. Next.js 16 App Router, Tailwind v4, raw SQL via `postgres` library. Legal entity: **immForm, Inc.**
 
 ---
 
 ## Commands
 
-Scripts live in `package.json`. The one thing they do not say: override the API tests' target with `WAITLIST_API_BASE_URL=http://...`
+Scripts live in `package.json`. The one thing they do not say: override the API tests' target with `API_BASE_URL=http://...`
 
 ---
 
@@ -25,7 +25,8 @@ Scripts live in `package.json`. The one thing they do not say: override the API 
 - Connection via `POSTGRES_URL` (Supabase Transaction Pooler)
 - **Prepared statements disabled** (`prepare: false`) — required for transaction pooler
 - **Schema auto-creates on first request** — `CREATE TABLE IF NOT EXISTS` in each route, no migration files
-- Tables: `waitlist_signups`, `data_requests`, `demo_engagements`, `api_rate_limits`
+- Tables: `data_requests`, `demo_engagements`, `api_rate_limits`
+- `waitlist_signups` still exists in the database with old signups. No code reads or writes it.
 - Rate limiting is pure SQL (atomic upsert), no Redis
 
 ---
@@ -36,11 +37,10 @@ All POST-only:
 
 | Route | Purpose |
 |---|---|
-| `POST /api/waitlist` | Waitlist signup — upserts, sends notification email |
 | `POST /api/request-data` | GDPR/CCPA data request — inserts with status='pending' |
 | `POST /api/demo-engagement` | Demo interaction logging — monotonic field accumulation |
 
-- Both waitlist and request-data use **honeypot fields** (`company` / `website`) — non-empty = silent 200, no DB write
+- Request-data uses a **honeypot field** (`website`) — non-empty = silent 200, no DB write
 - Notification emails go to hardcoded `andrew@immform.com` (not env var)
 
 ---
@@ -74,6 +74,6 @@ Use `.env.local` for local dev.
 
 - `pnpm` or `yarn`
 - Adding a test framework — current scripts work, keep them simple
-- Changing the honeypot field names (anti-spam depends on them)
+- Changing the honeypot field name (anti-spam depends on it)
 - Removing `prepare: false` from postgres client (breaks transaction pooler)
 - Adding migration tooling — schema auto-creates by design
