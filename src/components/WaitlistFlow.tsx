@@ -6,28 +6,22 @@ import {
   getAnalyticsDistinctId,
   trackAnalyticsEvent,
 } from "@/lib/analytics/client";
-import {
-  commitmentOptions,
-  emotionalHookOptions,
-  featureSignalOptions,
-  identityOptions,
-} from "@/lib/waitlistOptions";
+import { identityOptions } from "@/lib/waitlistOptions";
 import { siteConfig } from "@/lib/site";
 
-type WaitlistFlowProps = {
-  compact?: boolean;
+type SubmitState = "idle" | "submitting" | "success";
+type WaitlistPayload = {
+  email: string;
+  identity?: string;
+  identityOther?: string;
 };
 
-type SubmitState = "idle" | "submitting" | "success" | "error";
-type SuccessCode = "created" | "updated";
-type WaitlistSubmitResponse = {
-  code?: SuccessCode;
-  message?: string;
-};
-
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 2;
 const OTHER_IDENTITY_OPTION = "Other";
 const MAX_IDENTITY_OTHER_LENGTH = 120;
+const SAVE_FAILED_MESSAGE = "We could not save that. Please try again.";
+const PRIMARY_BUTTON_CLASS =
+  "inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-[var(--color-ink)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50";
 const shareIntentUrl = `https://x.com/intent/post?text=${encodeURIComponent(
   `Relora is on the App Store: ${siteConfig.appStoreUrl}`,
 )}`;
@@ -36,124 +30,82 @@ function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
-function getProgress(step: number, submitState: SubmitState): number {
-  if (submitState === "success") {
-    return 100;
-  }
-
-  return Math.round((step / TOTAL_STEPS) * 100);
-}
-
-async function readWaitlistSubmitResponse(
-  response: Response,
-): Promise<WaitlistSubmitResponse> {
+async function readErrorMessage(response: Response): Promise<string | undefined> {
   const contentType = response.headers.get("content-type") ?? "";
 
   try {
     if (contentType.includes("application/json")) {
-      const payload = (await response.json()) as { code?: string; message?: string };
-
-      return {
-        code:
-          payload.code === "created" || payload.code === "updated"
-            ? payload.code
-            : undefined,
-        message: payload.message,
-      };
+      const payload = (await response.json()) as { message?: string };
+      return payload.message;
     }
 
-    return {
-      message: (await response.text()).trim() || undefined,
-    };
+    return (await response.text()).trim() || undefined;
   } catch {
-    return {};
+    return undefined;
   }
 }
 
-export function WaitlistFlow({
-  compact = false,
-}: WaitlistFlowProps): JSX.Element {
+export function WaitlistFlow(): JSX.Element {
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
   const [identity, setIdentity] = useState("");
   const [identityOther, setIdentityOther] = useState("");
-  const [emotionalHook, setEmotionalHook] = useState("");
-  const [goldInsight, setGoldInsight] = useState("");
-  const [featureSignals, setFeatureSignals] = useState<string[]>([]);
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
-  const [successCode, setSuccessCode] = useState<SuccessCode>("created");
   const [errorMessage, setErrorMessage] = useState("");
   const [company, setCompany] = useState("");
 
-  const progress = getProgress(step, submitState);
-  const featureSignalCount = featureSignals.length;
+  const isSubmitting = submitState === "submitting";
   const isOtherIdentity = identity === OTHER_IDENTITY_OPTION;
 
   useEffect(() => {
     trackAnalyticsEvent("waitlist_step_viewed", { step });
   }, [step]);
 
-  async function submitWaitlist(selectedCommitment: string): Promise<void> {
+  // Returns true when the server saved the payload.
+  async function submitWaitlist(payload: WaitlistPayload): Promise<boolean> {
     setSubmitState("submitting");
     setErrorMessage("");
-
-    const analyticsDistinctId = getAnalyticsDistinctId();
 
     try {
       const response = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          analyticsDistinctId,
-          commitment: selectedCommitment,
+          ...payload,
+          analyticsDistinctId: getAnalyticsDistinctId(),
           company,
-          email,
-          emotionalHook,
-          featureSignal: featureSignals,
-          goldInsight,
-          identity,
-          identityOther: isOtherIdentity ? identityOther.trim() : "",
         }),
       });
 
-      const { code, message } = await readWaitlistSubmitResponse(response);
-
       if (!response.ok) {
-        throw new Error(message ?? "Could not submit your waitlist request.");
+        throw new Error((await readErrorMessage(response)) ?? SAVE_FAILED_MESSAGE);
       }
 
-      setSuccessCode(code ?? "created");
-      setSubmitState("success");
+      setSubmitState("idle");
+      return true;
     } catch (error) {
-      setSubmitState("error");
-      setErrorMessage(error instanceof Error ? error.message : "Submission failed.");
+      setSubmitState("idle");
+      setErrorMessage(error instanceof Error ? error.message : SAVE_FAILED_MESSAGE);
+      return false;
     }
   }
 
-  function handleEmailContinue(event: FormEvent<HTMLFormElement>): void {
+  async function handleEmailContinue(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
+    if (isSubmitting) {
+      return;
+    }
 
     if (!isValidEmail(email)) {
       setErrorMessage("Please provide a valid email address.");
       return;
     }
 
-    setErrorMessage("");
-    trackAnalyticsEvent("waitlist_step_completed", { step: 1 });
-    setStep(2);
-  }
-
-  function handleGoldInsightContinue(event: FormEvent<HTMLFormElement>): void {
-    event.preventDefault();
-
-    if (!goldInsight.trim()) {
-      setErrorMessage("Please share one detail you forgot recently.");
-      return;
+    trackAnalyticsEvent("waitlist_submit_started", { step: 1 });
+    if (await submitWaitlist({ email })) {
+      trackAnalyticsEvent("waitlist_step_completed", { step: 1 });
+      setStep(2);
     }
-
-    setErrorMessage("");
-    trackAnalyticsEvent("waitlist_step_completed", { step: 4 });
-    setStep(5);
   }
 
   function handleIdentitySelect(option: string): void {
@@ -165,54 +117,38 @@ export function WaitlistFlow({
     setErrorMessage("");
   }
 
-  function handleIdentityContinue(event: FormEvent<HTMLFormElement>): void {
+  async function handleRoleSave(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
+    if (isSubmitting) {
+      return;
+    }
 
     if (!identity) {
-      setErrorMessage("Please choose what best describes you.");
+      setErrorMessage("Pick one, or tap Skip.");
       return;
     }
 
     if (isOtherIdentity && !identityOther.trim()) {
-      setErrorMessage("Please share what best describes you.");
+      setErrorMessage("Tell us your role, or tap Skip.");
       return;
     }
 
-    setErrorMessage("");
-    trackAnalyticsEvent("waitlist_step_completed", {
-      step: 2,
+    trackAnalyticsEvent("waitlist_submit_started", { step: 2, identity });
+    const saved = await submitWaitlist({
+      email,
       identity,
+      identityOther: isOtherIdentity ? identityOther.trim() : "",
     });
-    setStep(3);
-  }
-
-  function toggleFeatureSignal(option: string): void {
-    setErrorMessage("");
-    setFeatureSignals((previous) => {
-      if (previous.includes(option)) {
-        return previous.filter((item) => item !== option);
-      }
-
-      if (previous.length >= 2) {
-        return previous;
-      }
-
-      return [...previous, option];
-    });
-  }
-
-  async function handleCommitmentSelect(option: string): Promise<void> {
-    if (submitState === "submitting") {
-      return;
+    if (saved) {
+      trackAnalyticsEvent("waitlist_step_completed", { step: 2, identity });
+      setSubmitState("success");
     }
+  }
 
-    trackAnalyticsEvent("waitlist_submit_started", {
-      step: 6,
-      commitment: option,
-      feature_signal_count: featureSignalCount,
-      identity,
-    });
-    await submitWaitlist(option);
+  function handleSkip(): void {
+    trackAnalyticsEvent("waitlist_step_completed", { step: 2, skipped: true });
+    setErrorMessage("");
+    setSubmitState("success");
   }
 
   if (submitState === "success") {
@@ -222,12 +158,10 @@ export function WaitlistFlow({
           saved note
         </p>
         <h3 className="mt-2 font-serif text-2xl text-[var(--color-ink)]">
-          {successCode === "updated" ? "You are already on the list." : "You are on the list."}
+          You are on the Android list.
         </h3>
         <p className="mt-2 text-sm text-[var(--color-muted)]">
-          {successCode === "updated"
-            ? "We found your existing signup and updated your responses."
-            : "Thanks for sharing this with us. Your answers help shape Relora."}
+          We will email you when Relora comes to Android.
         </p>
         <a
           href={shareIntentUrl}
@@ -243,20 +177,9 @@ export function WaitlistFlow({
 
   return (
     <div className="paper-card max-w-2xl min-w-0 p-4 md:p-5">
-      <div className="mb-4">
-        <div className="mb-2 flex items-center justify-between text-xs uppercase tracking-[0.12em] text-[var(--color-secondary)]">
-          <span>
-            Step {Math.min(step, TOTAL_STEPS)} of {TOTAL_STEPS}
-          </span>
-          <span>{progress}%</span>
-        </div>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--color-border-warm)]/60">
-          <div
-            className="h-full rounded-full bg-[var(--color-primary)] transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
+      <p className="mb-4 text-xs uppercase tracking-[0.12em] text-[var(--color-secondary)]">
+        Step {step} of {TOTAL_STEPS}
+      </p>
 
       <input
         type="text"
@@ -270,35 +193,47 @@ export function WaitlistFlow({
       />
 
       {step === 1 ? (
-        <form onSubmit={handleEmailContinue} className="space-y-3">
+        <form onSubmit={(event) => void handleEmailContinue(event)} className="space-y-3">
           <h3 className="font-serif text-2xl text-[var(--color-ink)]">
             Enter your email for the Android list.
           </h3>
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
+            <label htmlFor="waitlist-email" className="sr-only">
+              Email
+            </label>
             <input
+              id="waitlist-email"
               type="email"
               required
               name="email"
+              autoComplete="email"
               placeholder="you@gmail.com"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(event) => {
+                setEmail(event.target.value);
+                setErrorMessage("");
+              }}
               className="ph-ignore-input w-full rounded-full border border-[var(--color-border-warm)] bg-[var(--color-paper)] px-4 py-3 text-[var(--color-ink)] placeholder:text-[var(--color-muted)]"
             />
             <button
               type="submit"
-              className="inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-[var(--color-paper)] transition hover:bg-[var(--color-primary-hover)]"
+              disabled={isSubmitting}
+              className={PRIMARY_BUTTON_CLASS}
             >
-              Continue
+              {isSubmitting ? "Saving..." : "Continue"}
             </button>
           </div>
         </form>
       ) : null}
 
       {step === 2 ? (
-        <form onSubmit={handleIdentityContinue}>
+        <form onSubmit={(event) => void handleRoleSave(event)}>
           <h3 className="font-serif text-2xl text-[var(--color-ink)]">
             What best describes you?
           </h3>
+          <p className="mt-1 text-sm text-[var(--color-muted)]">
+            Your email is saved. This question is optional.
+          </p>
           <div className="mt-4 grid grid-cols-1 gap-3" role="radiogroup" aria-label="Identity options">
             {identityOptions.map((option) => (
               <button
@@ -334,9 +269,7 @@ export function WaitlistFlow({
                 maxLength={MAX_IDENTITY_OTHER_LENGTH}
                 onChange={(event) => {
                   setIdentityOther(event.target.value);
-                  if (errorMessage) {
-                    setErrorMessage("");
-                  }
+                  setErrorMessage("");
                 }}
                 placeholder="e.g. Student, Creator, Consultant"
                 className="ph-ignore-input w-full rounded-2xl border border-[var(--color-border-warm)] bg-[var(--color-paper)] px-4 py-3 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-muted)]"
@@ -347,134 +280,28 @@ export function WaitlistFlow({
             </div>
           ) : null}
 
-          <div className="mt-4">
+          <div className="mt-4 flex flex-wrap items-center gap-3">
             <button
               type="submit"
-              className="inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-[var(--color-paper)] transition hover:bg-[var(--color-primary-hover)]"
+              disabled={isSubmitting}
+              className={PRIMARY_BUTTON_CLASS}
             >
-              Continue
+              {isSubmitting ? "Saving..." : "Save"}
             </button>
-          </div>
-        </form>
-      ) : null}
-
-      {step === 3 ? (
-        <section>
-          <h3 className="font-serif text-2xl text-[var(--color-ink)]">
-            Be honest, how often do you forget small details about people?
-          </h3>
-          <div className="mt-4 grid grid-cols-1 gap-3">
-            {emotionalHookOptions.map((option) => (
-              <button
-                key={option}
-                type="button"
-                onClick={() => {
-                  setEmotionalHook(option);
-                  trackAnalyticsEvent("waitlist_step_completed", { step: 3 });
-                  setStep(4);
-                }}
-                className="rounded-2xl border border-[var(--color-border-warm)] bg-[var(--color-paper)] px-4 py-4 text-left text-sm font-medium text-[var(--color-ink)] transition hover:-translate-y-0.5 hover:border-[var(--color-secondary)]"
-              >
-                {option}
-              </button>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {step === 4 ? (
-        <form onSubmit={handleGoldInsightContinue} className="space-y-3">
-          <h3 className="font-serif text-2xl text-[var(--color-ink)]">
-            What&apos;s one detail you forgot recently that you wish you had remembered?
-          </h3>
-          <textarea
-            name="goldInsight"
-            rows={compact ? 3 : 4}
-            value={goldInsight}
-            onChange={(event) => setGoldInsight(event.target.value)}
-            placeholder="Example: I forgot they were on vacation when I gave them a call."
-            className="ph-ignore-input w-full rounded-2xl border border-[var(--color-border-warm)] bg-[var(--color-paper)] px-4 py-3 text-sm text-[var(--color-ink)] placeholder:text-[var(--color-muted)]"
-          />
-          <button
-            type="submit"
-            className="inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-[var(--color-paper)] transition hover:bg-[var(--color-primary-hover)]"
-          >
-            Continue
-          </button>
-        </form>
-      ) : null}
-
-      {step === 5 ? (
-        <section>
-          <h3 className="font-serif text-2xl text-[var(--color-ink)]">
-            What would make this valuable for you? (Pick up to 2)
-          </h3>
-          <div className="mt-4 grid grid-cols-1 gap-3">
-            {featureSignalOptions.map((option) => {
-              const selected = featureSignals.includes(option);
-              const disableOption = !selected && featureSignalCount >= 2;
-
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => toggleFeatureSignal(option)}
-                  disabled={disableOption}
-                  className={`rounded-2xl border px-4 py-4 text-left text-sm font-medium transition ${
-                    selected
-                      ? "border-[var(--color-secondary)] bg-[var(--color-secondary)]/10 text-[var(--color-ink)]"
-                      : "border-[var(--color-border-warm)] bg-[var(--color-paper)] text-[var(--color-ink)] hover:-translate-y-0.5 hover:border-[var(--color-secondary)]"
-                  } ${disableOption ? "cursor-not-allowed opacity-60" : ""}`}
-                >
-                  {option}
-                </button>
-              );
-            })}
-          </div>
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-xs text-[var(--color-muted)]">{featureSignalCount}/2 selected</p>
             <button
               type="button"
-              onClick={() => {
-                trackAnalyticsEvent("waitlist_step_completed", {
-                  step: 5,
-                  feature_signal_count: featureSignalCount,
-                });
-                setStep(6);
-              }}
-              disabled={featureSignalCount === 0}
-              className="inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-[var(--color-paper)] transition hover:bg-[var(--color-primary-hover)] disabled:cursor-not-allowed disabled:opacity-80"
+              onClick={handleSkip}
+              disabled={isSubmitting}
+              className="inline-flex min-h-11 items-center px-2 text-sm font-semibold text-[var(--color-secondary)] underline-offset-4 hover:underline disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Continue
+              Skip
             </button>
           </div>
-        </section>
+        </form>
       ) : null}
 
-      {step === 6 ? (
-        <section>
-          <h3 className="font-serif text-2xl text-[var(--color-ink)]">Want to hear when Android ships?</h3>
-          <div className="mt-4 grid grid-cols-1 gap-3">
-            {commitmentOptions.map((option) => (
-              <button
-                key={option}
-                type="button"
-                onClick={() => void handleCommitmentSelect(option)}
-                disabled={submitState === "submitting"}
-                className="rounded-2xl border border-[var(--color-border-warm)] bg-[var(--color-paper)] px-4 py-4 text-left text-sm font-medium text-[var(--color-ink)] transition hover:-translate-y-0.5 hover:border-[var(--color-secondary)] disabled:cursor-not-allowed disabled:opacity-75"
-              >
-                {option}
-              </button>
-            ))}
-          </div>
-          {submitState === "submitting" ? (
-            <p className="mt-3 text-sm text-[var(--color-muted)]">Saving...</p>
-          ) : null}
-        </section>
-      ) : null}
-
-      {submitState === "error" ? (
-        <p className="mt-3 text-sm text-[var(--color-primary-hover)]" role="alert">
+      {errorMessage ? (
+        <p className="mt-3 text-sm text-[var(--color-error)]" role="alert">
           {errorMessage}
         </p>
       ) : null}
