@@ -25,7 +25,7 @@ export default function PrivacyPage(): JSX.Element {
         <ul className="mt-3 list-disc space-y-1 pl-6 leading-7 text-[var(--color-ink)]">
           <li>Download and use our mobile application (<strong>Relora</strong>), or any other application of ours that links to this Privacy Notice</li>
           <li>Use <strong>Relora</strong>, a mobile application that helps users capture and organize details about people, including contacts, memories, and reminders, using voice notes</li>
-          <li>Visit our website, join our waitlist, view product demos, or submit a privacy rights request through reloraapp.com</li>
+          <li>Visit our website, view product demos, or submit a privacy rights request through reloraapp.com</li>
           <li>Engage with us in other related ways, including any marketing or events</li>
         </ul>
         <p className="mt-4 leading-7 text-[var(--color-ink)]">

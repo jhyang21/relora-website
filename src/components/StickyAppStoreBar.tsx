@@ -6,11 +6,9 @@ import { trackAnalyticsEvent } from "@/lib/analytics/client";
 import { appStoreLink } from "@/lib/site";
 
 const HERO_END_ID = "hero-end";
-const FORM_SECTION_ID = "waitlist";
 
 export function StickyAppStoreBar(): JSX.Element | null {
   const [pastHero, setPastHero] = useState(false);
-  const [formFocused, setFormFocused] = useState(false);
 
   useEffect(() => {
     const sentinel = document.getElementById(HERO_END_ID);
@@ -25,27 +23,7 @@ export function StickyAppStoreBar(): JSX.Element | null {
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    const section = document.getElementById(FORM_SECTION_ID);
-    if (!section) {
-      return;
-    }
-    const onFocusIn = () => setFormFocused(true);
-    const onFocusOut = (event: FocusEvent) => {
-      const next = event.relatedTarget;
-      if (!(next instanceof Node) || !section.contains(next)) {
-        setFormFocused(false);
-      }
-    };
-    section.addEventListener("focusin", onFocusIn);
-    section.addEventListener("focusout", onFocusOut);
-    return () => {
-      section.removeEventListener("focusin", onFocusIn);
-      section.removeEventListener("focusout", onFocusOut);
-    };
-  }, []);
-
-  if (!pastHero || formFocused) {
+  if (!pastHero) {
     return null;
   }
 

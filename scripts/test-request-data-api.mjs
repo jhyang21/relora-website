@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const BASE_URL = process.env.WAITLIST_API_BASE_URL ?? "http://localhost:3000";
+const BASE_URL = process.env.API_BASE_URL ?? "http://localhost:3000";
 const ENDPOINT = `${BASE_URL.replace(/\/$/, "")}/api/request-data`;
 const MODE = process.argv[2] ?? "--all";
 
