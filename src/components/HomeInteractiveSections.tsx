@@ -9,33 +9,13 @@ type HomeInteractiveSectionsProps = {
   useCases: string[];
 };
 
-function prefersReducedMotion(): boolean {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
-    return false;
-  }
-
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
 export function HomeInteractiveSections({
   useCases,
 }: HomeInteractiveSectionsProps): JSX.Element {
-  function scrollToWaitlist(): void {
-    const waitlistSection = document.getElementById("waitlist");
-    if (!waitlistSection) {
-      return;
-    }
-
-    waitlistSection.scrollIntoView({
-      behavior: prefersReducedMotion() ? "auto" : "smooth",
-      block: "start",
-    });
-  }
-
   return (
     <>
       <div className="mt-10 min-w-0 md:mt-14">
-        <InteractiveDemoLoader onJoinWaitlist={scrollToWaitlist} />
+        <InteractiveDemoLoader />
       </div>
 
       <section className="mt-24 md:mt-28">
@@ -50,7 +30,10 @@ export function HomeInteractiveSections({
       </section>
 
       <section id="waitlist" className="mt-24 min-w-0 scroll-mt-6 md:mt-28">
-        <h2 className="mb-4 font-serif text-3xl text-[var(--color-ink)]">Join early users shaping Relora</h2>
+        <h2 className="font-serif text-3xl text-[var(--color-ink)]">Not on iPhone yet? Join the Android list</h2>
+        <p className="mt-2 mb-4 text-base text-[var(--color-muted)]">
+          Relora is iPhone-only today. Leave your email and you&apos;ll hear first when Android ships.
+        </p>
         <WaitlistFlow />
       </section>
     </>

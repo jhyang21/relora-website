@@ -15,16 +15,13 @@ import {
 } from "@/lib/analytics/client";
 import { demoAudioLevels } from "@/lib/demoAudioLevels";
 import { getOrCreateDemoSessionId } from "@/lib/demoSession";
+import { siteConfig } from "@/lib/site";
 import {
   demoScenarioMap,
   demoScenarios,
   type DemoScenario,
   type DemoScenarioSlug,
 } from "@/lib/demoScenarios";
-
-type InteractiveDemoProps = {
-  onJoinWaitlist: () => void;
-};
 
 type DemoEngagementEventType =
   | "scenario_started"
@@ -246,9 +243,7 @@ function markScenarioCompleted(
   completedScenarioSlugs.add(slug);
 }
 
-export function InteractiveDemo({
-  onJoinWaitlist,
-}: InteractiveDemoProps): JSX.Element {
+export function InteractiveDemo(): JSX.Element {
   const reduceMotion = useReducedMotion();
   const demoRootRef = useRef<HTMLDivElement | null>(null);
   const phaseTimeoutsRef = useRef<number[]>([]);
@@ -559,15 +554,14 @@ export function InteractiveDemo({
     ],
   );
 
-  const handleJoinWaitlist = useCallback(function handleJoinWaitlist(): void {
+  const handleAppStoreClick = useCallback(function handleAppStoreClick(): void {
     stopCurrentAudio();
     postEngagement({
       eventType: "cta_clicked",
-      ctaClicked: "waitlist-scroll",
+      ctaClicked: "app-store",
       scenario: selectedSlug ?? FALLBACK_SCENARIO_SLUG,
     });
-    onJoinWaitlist();
-  }, [onJoinWaitlist, postEngagement, selectedSlug, stopCurrentAudio]);
+  }, [postEngagement, selectedSlug, stopCurrentAudio]);
 
   const handleReminderToggle = useCallback(function handleReminderToggle(): void {
     setReminderEnabled((current) => !current);
@@ -677,13 +671,15 @@ export function InteractiveDemo({
 
       {phase === "complete" ? (
         <div className="flex justify-center">
-          <button
-            type="button"
-            onClick={handleJoinWaitlist}
+          <a
+            href={siteConfig.appStoreUrl}
+            target="_blank"
+            rel="noreferrer"
+            onClick={handleAppStoreClick}
             className="inline-flex min-h-14 items-center justify-center rounded-full bg-[var(--color-primary)] px-8 py-4 text-base font-semibold text-[var(--color-paper)] transition hover:bg-[var(--color-primary-hover)]"
           >
-            Join the waitlist
-          </button>
+            Get Relora on the App Store
+          </a>
         </div>
       ) : null}
     </div>

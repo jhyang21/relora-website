@@ -43,8 +43,7 @@ export default function AboutPage() {
             <Card fold>
               <p className="text-xs uppercase tracking-[0.12em] text-[var(--color-secondary)]">Current focus</p>
               <p className="mt-2 text-[var(--color-ink)]">
-                Shipping waitlist MVP, refining memory capture UX, and validating early user
-                workflows.
+                Live on the App Store since October 2026; onboarding the first agents.
               </p>
             </Card>
             <Card>

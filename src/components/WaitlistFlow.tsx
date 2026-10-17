@@ -29,7 +29,7 @@ const TOTAL_STEPS = 6;
 const OTHER_IDENTITY_OPTION = "Other";
 const MAX_IDENTITY_OTHER_LENGTH = 120;
 const shareIntentUrl = `https://x.com/intent/post?text=${encodeURIComponent(
-  `I just joined the Relora waitlist: client relationship memory for professionals, by @andrewyang_X. Join me at ${siteConfig.url}`,
+  `Relora is on the App Store: ${siteConfig.appStoreUrl}`,
 )}`;
 
 function isValidEmail(email: string): boolean {
@@ -272,7 +272,7 @@ export function WaitlistFlow({
       {step === 1 ? (
         <form onSubmit={handleEmailContinue} className="space-y-3">
           <h3 className="font-serif text-2xl text-[var(--color-ink)]">
-            Enter your email to get early access.
+            Enter your email for the Android list.
           </h3>
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
             <input
@@ -453,7 +453,7 @@ export function WaitlistFlow({
 
       {step === 6 ? (
         <section>
-          <h3 className="font-serif text-2xl text-[var(--color-ink)]">Want early beta access?</h3>
+          <h3 className="font-serif text-2xl text-[var(--color-ink)]">Want to hear when Android ships?</h3>
           <div className="mt-4 grid grid-cols-1 gap-3">
             {commitmentOptions.map((option) => (
               <button

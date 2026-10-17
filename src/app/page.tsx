@@ -5,7 +5,7 @@ import { HomeInteractiveSections } from "@/components/HomeInteractiveSections";
 import { MemoryCardStack } from "@/components/MemoryCardStack";
 import { SiteNav } from "@/components/SiteNav";
 import { SmoothScrollLink } from "@/components/SmoothScrollLink";
-import { buildPageMetadata } from "@/lib/site";
+import { buildPageMetadata, siteConfig } from "@/lib/site";
 
 const howItWorks = [
   {
@@ -39,7 +39,7 @@ export default function HomePage(): JSX.Element {
         <section className="grid grid-cols-1 items-center gap-10 py-10 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] md:py-16">
           <div className="min-w-0">
             <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[var(--color-secondary)]">
-              Relora waitlist
+              Now on the App Store
             </p>
             <h1 className="mt-4 max-w-full font-serif text-4xl leading-[1.05] text-[var(--color-ink)] sm:max-w-[14ch] sm:text-5xl md:text-6xl">
               Remember the details that win client relationships.
@@ -49,12 +49,14 @@ export default function HomePage(): JSX.Element {
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <SmoothScrollLink
-                href="#waitlist"
+                href={siteConfig.appStoreUrl}
+                target="_blank"
+                rel="noreferrer"
                 className="inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-[var(--color-paper)] transition hover:bg-[var(--color-primary-hover)]"
                 analyticsEvent="hero_cta_clicked"
-                analyticsProperties={{ cta_id: "hero_join_waitlist" }}
+                analyticsProperties={{ cta_id: "hero_app_store" }}
               >
-                Join the waitlist
+                Download on the App Store
               </SmoothScrollLink>
               <SmoothScrollLink
                 href="#demo"

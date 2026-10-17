@@ -4,10 +4,6 @@ import type { JSX } from "react";
 import dynamic from "next/dynamic";
 import { Card } from "@/components/Card";
 
-type InteractiveDemoLoaderProps = {
-  onJoinWaitlist: () => void;
-};
-
 function LoadingCard(): JSX.Element {
   return (
     <Card className="p-5">
@@ -19,16 +15,10 @@ function LoadingCard(): JSX.Element {
   );
 }
 
-const InteractiveDemo = dynamic(
+export const InteractiveDemoLoader = dynamic(
   () => import("@/components/demo/InteractiveDemo").then((module) => module.InteractiveDemo),
   {
     ssr: false,
     loading: LoadingCard,
   },
 );
-
-export function InteractiveDemoLoader({
-  onJoinWaitlist,
-}: InteractiveDemoLoaderProps): JSX.Element {
-  return <InteractiveDemo onJoinWaitlist={onJoinWaitlist} />;
-}
