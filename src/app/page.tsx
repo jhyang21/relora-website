@@ -5,7 +5,7 @@ import { HomeInteractiveSections } from "@/components/HomeInteractiveSections";
 import { MemoryCardStack } from "@/components/MemoryCardStack";
 import { SiteNav } from "@/components/SiteNav";
 import { SmoothScrollLink } from "@/components/SmoothScrollLink";
-import { buildPageMetadata, siteConfig } from "@/lib/site";
+import { appStoreLink, buildPageMetadata } from "@/lib/site";
 
 const howItWorks = [
   {
@@ -18,15 +18,15 @@ const howItWorks = [
   },
   {
     title: "Surface",
-    body: "Get context before client calls, meetings, or follow-ups so you never miss a beat.",
+    body: "Open their name before you call and see what they told you last time.",
   },
 ];
 
 const useCases = [
   "Real estate agents and brokers",
-  "Lawyers and legal professionals",
   "Financial advisors",
-  "Sales and business development",
+  "Sales teams and founders",
+  "Lawyers and legal professionals",
 ];
 
 export const metadata: Metadata = buildPageMetadata();
@@ -45,18 +45,25 @@ export default function HomePage(): JSX.Element {
               Remember the details that win client relationships.
             </h1>
             <p className="mt-5 max-w-[56ch] text-lg leading-8 text-[var(--color-muted)]">
-              Relora turns quick voice notes into structured context tied to contacts, so you show up prepared for every client interaction.
+              Talk for 30 seconds after a call. Relora saves the note, the key facts, and the follow-up on that contact.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <SmoothScrollLink
-                href={siteConfig.appStoreUrl}
+                href={appStoreLink("site_hero")}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-[var(--color-paper)] transition hover:bg-[var(--color-primary-hover)]"
+                className="inline-flex shrink-0 items-center transition hover:opacity-85"
                 analyticsEvent="hero_cta_clicked"
                 analyticsProperties={{ cta_id: "hero_app_store" }}
               >
-                Download on the App Store
+                {/* eslint-disable-next-line @next/next/no-img-element -- Apple's official badge SVG, shown unmodified. */}
+                <img
+                  src="/app-store-badge.svg"
+                  alt="Download on the App Store"
+                  width={132}
+                  height={44}
+                  className="block h-11 w-auto md:h-12"
+                />
               </SmoothScrollLink>
               <SmoothScrollLink
                 href="#demo"
@@ -66,6 +73,10 @@ export default function HomePage(): JSX.Element {
               >
                 See it in action
               </SmoothScrollLink>
+            </div>
+            <div className="mt-4 space-y-1 text-sm text-[var(--color-muted)]">
+              <p>Free for 7 days, then $19.99 a month. iPhone, iOS 17 or later.</p>
+              <p>Voice notes go to OpenAI for transcription and drafting.</p>
             </div>
           </div>
           <MemoryCardStack />
@@ -95,7 +106,7 @@ export default function HomePage(): JSX.Element {
           <div className="min-w-0 max-w-3xl">
             <p className="text-xs uppercase tracking-[0.12em] text-[var(--color-secondary)]">Interactive demo</p>
             <h2 id="demo-heading" className="mt-2 font-serif text-3xl text-[var(--color-ink)]">
-              See a voice note become relationship-ready context
+              Hear a 15-second note. See what Relora saves.
             </h2>
           </div>
         </section>
@@ -104,7 +115,10 @@ export default function HomePage(): JSX.Element {
 
         <footer className="mt-20 border-t border-[var(--color-border-warm)] py-8 text-sm text-[var(--color-muted)]">
           <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-            <p className="break-words">Contact: andrew@immform.com</p>
+            <div className="space-y-1">
+              <p>Built by Andrew Yang in Orange County. I read every email.</p>
+              <p className="break-words">Contact: andrew@immform.com</p>
+            </div>
             <div className="flex flex-wrap gap-3">
               <a className="inline-flex min-h-11 items-center hover:text-[var(--color-ink)]" href="https://www.linkedin.com/in/junhyeok-andrew-yang/" target="_blank" rel="noreferrer">
                 LinkedIn

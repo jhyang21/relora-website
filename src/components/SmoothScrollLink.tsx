@@ -20,6 +20,20 @@ function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign"] as const;
+
+function readUtmProperties(): AnalyticsPayload {
+  const params = new URLSearchParams(window.location.search);
+  const utm: AnalyticsPayload = {};
+  for (const key of UTM_KEYS) {
+    const value = params.get(key)?.trim();
+    if (value) {
+      utm[key] = value;
+    }
+  }
+  return utm;
+}
+
 function syncLocationHash(rawHash: string): void {
   if (typeof history === "undefined" || typeof history.pushState !== "function") {
     return;
@@ -42,7 +56,10 @@ export function SmoothScrollLink({
     }
 
     if (analyticsEvent) {
-      trackAnalyticsEvent(analyticsEvent, analyticsProperties);
+      trackAnalyticsEvent(analyticsEvent, {
+        ...analyticsProperties,
+        ...readUtmProperties(),
+      });
     }
 
     const hashIndex = href.indexOf("#");

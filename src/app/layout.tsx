@@ -21,6 +21,7 @@ export const metadata: Metadata = {
   authors: [{ name: siteConfig.creator }],
   creator: siteConfig.creator,
   publisher: siteConfig.creator,
+  itunes: { appId: siteConfig.appStoreId },
 };
 
 const structuredData = [
@@ -42,6 +43,21 @@ const structuredData = [
     publisher: {
       "@type": "Organization",
       name: siteConfig.creator,
+    },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "MobileApplication",
+    name: siteConfig.name,
+    operatingSystem: "iOS",
+    applicationCategory: "BusinessApplication",
+    url: siteConfig.appStoreUrl,
+    installUrl: siteConfig.appStoreUrl,
+    offers: {
+      "@type": "Offer",
+      price: "19.99",
+      priceCurrency: "USD",
+      description: "Free for 7 days, then $19.99 a month",
     },
   },
 ];

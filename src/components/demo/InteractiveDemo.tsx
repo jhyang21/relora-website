@@ -15,7 +15,7 @@ import {
 } from "@/lib/analytics/client";
 import { demoAudioLevels } from "@/lib/demoAudioLevels";
 import { getOrCreateDemoSessionId } from "@/lib/demoSession";
-import { siteConfig } from "@/lib/site";
+import { appStoreLink } from "@/lib/site";
 import {
   demoScenarioMap,
   demoScenarios,
@@ -672,7 +672,7 @@ export function InteractiveDemo(): JSX.Element {
       {phase === "complete" ? (
         <div className="flex justify-center">
           <a
-            href={siteConfig.appStoreUrl}
+            href={appStoreLink("site_demo")}
             target="_blank"
             rel="noreferrer"
             onClick={handleAppStoreClick}
