@@ -47,3 +47,4 @@ PROGRESS.md
 .codex-dev.out.log
 .codex-dev.err.log
 output/playwright/
+brag-output/

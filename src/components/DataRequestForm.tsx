@@ -240,14 +240,14 @@ export function DataRequestForm(): JSX.Element {
           <button
             type="submit"
             disabled={submitState === "submitting"}
-            className="inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-[var(--color-paper)] transition hover:bg-[var(--color-primary-hover)] disabled:cursor-not-allowed disabled:opacity-75"
+            className="inline-flex min-h-11 items-center justify-center rounded-full bg-[var(--color-primary)] px-6 py-3 text-sm font-semibold text-[var(--color-ink)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {submitState === "submitting" ? "Submitting..." : "Submit request"}
           </button>
 
           {errorMessage ? (
             <p
-              className="mt-3 text-sm text-[var(--color-primary-hover)]"
+              className="mt-3 text-sm text-[var(--color-error)]"
               role="alert"
             >
               {errorMessage}

@@ -9,6 +9,7 @@
   --color-primary: #f05a3b;
   --color-primary-hover: #d94b30;
   --color-primary-tint: #ffe3dc;
+  --color-error: #b8391a; /* coral darkened to 5.4:1 on paper; error text only */
   --color-secondary: #2e6f62;
   --color-secondary-tint: #d9efea;
   --radius-card: 16px;
@@ -41,7 +42,7 @@ button:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
   outline: 2px solid transparent;
-  box-shadow: 0 0 0 4px var(--color-primary-tint);
+  box-shadow: 0 0 0 3px var(--color-paper), 0 0 0 5px var(--color-secondary);
 }
 
 .paper-card {
@@ -120,6 +121,17 @@ textarea:focus-visible {
   line-height: inherit;
   letter-spacing: inherit;
   word-spacing: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-shimmer::after,
+  .demo-highlight-sweep {
+    animation: none;
+  }
+
+  .demo-highlight-sweep {
+    background-size: 100% 100%;
+  }
 }
 
 @keyframes demo-shimmer {

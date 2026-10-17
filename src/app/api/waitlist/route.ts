@@ -6,15 +6,9 @@ import {
   captureServerAnalyticsEvent,
   getRequestSiteHost,
 } from "@/lib/analytics/server";
-import {
-  COMMITMENT_OPTIONS,
-  EMOTIONAL_HOOK_OPTIONS,
-  FEATURE_SIGNAL_OPTIONS,
-  IDENTITY_OPTIONS,
-} from "@/lib/waitlistOptions";
+import { IDENTITY_OPTIONS } from "@/lib/waitlistOptions";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MAX_GOLD_INSIGHT_LENGTH = 500;
 const MAX_IDENTITY_OTHER_LENGTH = 120;
 const OTHER_IDENTITY_OPTION = "Other";
 const RATE_LIMIT_WINDOW_SECONDS = 10 * 60;
@@ -35,9 +29,9 @@ type RateLimitState = {
   retryAfterSeconds: number;
 };
 type SafeWaitlistAnalyticsProperties = {
-  commitment: string | null;
-  feature_signal_count: number;
   identity: string | null;
+  platform: "android";
+  stage: "email" | "role";
 };
 
 function normalizeEmail(email: string): string {
@@ -46,26 +40,6 @@ function normalizeEmail(email: string): string {
 
 function normalizeText(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
-}
-
-function normalizeFeatureSignal(value: unknown): string[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  const unique = new Set<string>();
-  for (const item of value) {
-    if (typeof item !== "string") {
-      continue;
-    }
-
-    const normalized = item.trim();
-    if (FEATURE_SIGNAL_OPTIONS.has(normalized)) {
-      unique.add(normalized);
-    }
-  }
-
-  return [...unique];
 }
 
 function getSqlClient(): Sql {
@@ -140,6 +114,11 @@ async function ensureWaitlistSchema(sql: Sql): Promise<void> {
   await sql`
     ALTER TABLE waitlist_signups
     ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  `;
+
+  await sql`
+    ALTER TABLE waitlist_signups
+    ADD COLUMN IF NOT EXISTS platform TEXT
   `;
 
   await sql`
@@ -223,14 +202,7 @@ async function hitRateLimit(
   };
 }
 
-async function notifyWaitlistSignup(params: {
-  email: string;
-  identity: string;
-  emotionalHook: string;
-  goldInsight: string;
-  featureSignals: string[];
-  commitment: string;
-}): Promise<void> {
+async function notifyWaitlistSignup(email: string): Promise<void> {
   if (!process.env.RESEND_API_KEY) {
     return;
   }
@@ -240,16 +212,12 @@ async function notifyWaitlistSignup(params: {
   await resend.emails.send({
     from: "Relora <notifications@reloraapp.com>",
     to: NOTIFY_EMAIL,
-    subject: `New waitlist signup: ${params.email}`,
+    subject: `New Android list signup: ${email}`,
     text: [
-      "New waitlist signup on reloraapp.com",
+      "New Android list signup on reloraapp.com",
       "",
-      `Email: ${params.email}`,
-      `Identity: ${params.identity}`,
-      `Emotional hook: ${params.emotionalHook}`,
-      `Gold insight: ${params.goldInsight}`,
-      `Features: ${params.featureSignals.join(", ")}`,
-      `Commitment: ${params.commitment}`,
+      `Email: ${email}`,
+      "Platform: Android",
     ].join("\n"),
   });
 }
@@ -258,9 +226,9 @@ export async function POST(request: Request): Promise<NextResponse> {
   const siteHost = getRequestSiteHost(request);
   let analyticsDistinctId: string | null = null;
   let safeAnalyticsProperties: SafeWaitlistAnalyticsProperties = {
-    commitment: null,
-    feature_signal_count: 0,
     identity: null,
+    platform: "android",
+    stage: "email",
   };
 
   async function captureWaitlistFailure(
@@ -302,16 +270,12 @@ export async function POST(request: Request): Promise<NextResponse> {
     const company = normalizeText(body.company);
     const identity = normalizeText(body.identity);
     const identityOther = normalizeText(body.identityOther);
-    const emotionalHook = normalizeText(body.emotionalHook);
-    const goldInsight = normalizeText(body.goldInsight);
-    const commitment = normalizeText(body.commitment);
-    const featureSignals = normalizeFeatureSignal(body.featureSignal);
 
     analyticsDistinctId = normalizeAnalyticsDistinctId(body.analyticsDistinctId);
     safeAnalyticsProperties = {
-      commitment: COMMITMENT_OPTIONS.has(commitment) ? commitment : null,
-      feature_signal_count: featureSignals.length,
       identity: IDENTITY_OPTIONS.has(identity) ? identity : null,
+      platform: "android",
+      stage: identity.length > 0 ? "role" : "email",
     };
 
     if (company.length > 0) {
@@ -326,7 +290,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       );
     }
 
-    if (!IDENTITY_OPTIONS.has(identity)) {
+    if (identity.length > 0 && !IDENTITY_OPTIONS.has(identity)) {
       await captureWaitlistFailure(400, "invalid_identity");
       return NextResponse.json(
         { ok: false, message: "Please choose what best describes you." },
@@ -350,46 +314,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       );
     }
 
-    if (!EMOTIONAL_HOOK_OPTIONS.has(emotionalHook)) {
-      await captureWaitlistFailure(400, "invalid_emotional_hook");
-      return NextResponse.json(
-        { ok: false, message: "Please choose how often this happens for you." },
-        { status: 400 },
-      );
-    }
-
-    if (goldInsight.length === 0) {
-      await captureWaitlistFailure(400, "missing_gold_insight");
-      return NextResponse.json(
-        { ok: false, message: "Please share one detail you wish you had remembered." },
-        { status: 400 },
-      );
-    }
-
-    if (goldInsight.length > MAX_GOLD_INSIGHT_LENGTH) {
-      await captureWaitlistFailure(400, "gold_insight_too_long");
-      return NextResponse.json(
-        { ok: false, message: "Please keep your response under 500 characters." },
-        { status: 400 },
-      );
-    }
-
-    if (featureSignals.length === 0 || featureSignals.length > 2) {
-      await captureWaitlistFailure(400, "invalid_feature_signal_count");
-      return NextResponse.json(
-        { ok: false, message: "Please select one or two features that matter most." },
-        { status: 400 },
-      );
-    }
-
-    if (!COMMITMENT_OPTIONS.has(commitment)) {
-      await captureWaitlistFailure(400, "invalid_commitment");
-      return NextResponse.json(
-        { ok: false, message: "Please choose one beta access option to continue." },
-        { status: 400 },
-      );
-    }
-
+    const identityValue = identity.length > 0 ? identity : null;
     const identityOtherValue =
       identity === OTHER_IDENTITY_OPTION ? identityOther : null;
 
@@ -439,66 +364,34 @@ export async function POST(request: Request): Promise<NextResponse> {
       );
     }
 
-    const [insertedSignup] = await sql<{ id: number }[]>`
-      INSERT INTO waitlist_signups (
-        email,
-        identity,
-        identity_other,
-        emotional_hook,
-        gold_insight,
-        feature_signal,
-        commitment
-      )
-      VALUES (
-        ${email},
-        ${identity},
-        ${identityOtherValue},
-        ${emotionalHook},
-        ${goldInsight},
-        ${featureSignals.join(", ")},
-        ${commitment}
-      )
-      ON CONFLICT (email)
-      DO NOTHING
-      RETURNING id
+    // Never wipe saved answers: keep the old platform, and keep the old
+    // role unless this call sends a new one.
+    const [upserted] = await sql<{ inserted: boolean }[]>`
+      INSERT INTO waitlist_signups (email, platform, identity, identity_other)
+      VALUES (${email}, 'android', ${identityValue}, ${identityOtherValue})
+      ON CONFLICT (email) DO UPDATE SET
+        platform = COALESCE(waitlist_signups.platform, 'android'),
+        identity = COALESCE(EXCLUDED.identity, waitlist_signups.identity),
+        identity_other = CASE
+          WHEN EXCLUDED.identity IS NULL THEN waitlist_signups.identity_other
+          ELSE EXCLUDED.identity_other
+        END
+      RETURNING (xmax = 0) AS inserted
     `;
 
-    if (insertedSignup) {
-      await notifyWaitlistSignup({
-        email,
-        identity,
-        emotionalHook,
-        goldInsight,
-        featureSignals,
-        commitment,
-      }).catch(() => undefined);
+    if (upserted?.inserted) {
+      await notifyWaitlistSignup(email).catch(() => undefined);
 
       await captureWaitlistSuccess("created");
       return NextResponse.json(
-        { ok: true, code: "created", message: "Thanks for joining the waitlist." },
+        { ok: true, code: "created", message: "You are on the Android list." },
         { status: 200 },
       );
     }
 
-    await sql`
-      UPDATE waitlist_signups
-      SET
-        identity = ${identity},
-        identity_other = ${identityOtherValue},
-        emotional_hook = ${emotionalHook},
-        gold_insight = ${goldInsight},
-        feature_signal = ${featureSignals.join(", ")},
-        commitment = ${commitment}
-      WHERE email = ${email}
-    `;
-
     await captureWaitlistSuccess("updated");
     return NextResponse.json(
-      {
-        ok: true,
-        code: "updated",
-        message: "You are already on the waitlist. We updated your responses.",
-      },
+      { ok: true, code: "updated", message: "You are already on the Android list." },
       { status: 200 },
     );
   } catch {

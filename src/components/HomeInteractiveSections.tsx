@@ -3,7 +3,9 @@
 import type { JSX } from "react";
 import { Card } from "@/components/Card";
 import { InteractiveDemoLoader } from "@/components/demo/InteractiveDemoLoader";
+import { SmoothScrollLink } from "@/components/SmoothScrollLink";
 import { WaitlistFlow } from "@/components/WaitlistFlow";
+import { appStoreLink } from "@/lib/site";
 
 type HomeInteractiveSectionsProps = {
   useCases: string[];
@@ -26,6 +28,25 @@ export function HomeInteractiveSections({
               <p className="text-base font-medium text-[var(--color-ink)]">{useCase}</p>
             </Card>
           ))}
+        </div>
+        <div className="mt-8 flex justify-center">
+          <SmoothScrollLink
+            href={appStoreLink("site_usecases")}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex shrink-0 items-center transition hover:opacity-85"
+            analyticsEvent="hero_cta_clicked"
+            analyticsProperties={{ cta_id: "usecases_app_store" }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element -- Apple's official badge SVG, shown unmodified. */}
+            <img
+              src="/app-store-badge.svg"
+              alt="Download on the App Store"
+              width={132}
+              height={44}
+              className="block h-11 w-auto md:h-12"
+            />
+          </SmoothScrollLink>
         </div>
       </section>
 

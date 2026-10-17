@@ -5,6 +5,7 @@ import { HomeInteractiveSections } from "@/components/HomeInteractiveSections";
 import { MemoryCardStack } from "@/components/MemoryCardStack";
 import { SiteNav } from "@/components/SiteNav";
 import { SmoothScrollLink } from "@/components/SmoothScrollLink";
+import { StickyAppStoreBar } from "@/components/StickyAppStoreBar";
 import { appStoreLink, buildPageMetadata } from "@/lib/site";
 
 const howItWorks = [
@@ -35,7 +36,7 @@ export default function HomePage(): JSX.Element {
   return (
     <div className="min-h-screen">
       <SiteNav current="home" />
-      <main className="mx-auto w-full max-w-6xl px-6 pb-20 md:px-10">
+      <main className="mx-auto w-full max-w-6xl px-6 pb-28 md:px-10 md:pb-20">
         <section className="grid grid-cols-1 items-center gap-10 py-10 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] md:py-16">
           <div className="min-w-0">
             <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[var(--color-secondary)]">
@@ -81,6 +82,7 @@ export default function HomePage(): JSX.Element {
           </div>
           <MemoryCardStack />
         </section>
+        <div id="hero-end" aria-hidden="true" />
 
         <section id="how-it-works" className="mt-14 grid grid-cols-1 gap-5 md:grid-cols-3">
           {howItWorks.map((item, index) => (
@@ -133,6 +135,7 @@ export default function HomePage(): JSX.Element {
           </div>
         </footer>
       </main>
+      <StickyAppStoreBar />
     </div>
   );
 }
