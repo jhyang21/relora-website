@@ -35,10 +35,10 @@ function getKeyThingClassName(isSelected: boolean): string {
 
 function getReminderTrackClassName(reminderEnabled: boolean): string {
   if (reminderEnabled) {
-    return "flex min-h-11 min-w-20 items-center rounded-full border border-[var(--color-secondary)] bg-[var(--color-secondary)] px-2 transition";
+    return "flex min-h-11 w-20 shrink-0 self-start items-center rounded-full border border-[var(--color-secondary)] bg-[var(--color-secondary)] px-2 transition";
   }
 
-  return "flex min-h-11 min-w-20 items-center rounded-full border border-[var(--color-border-warm)] bg-[var(--color-surface)] px-2 transition";
+  return "flex min-h-11 w-20 shrink-0 self-start items-center rounded-full border border-[var(--color-border-warm)] bg-[var(--color-surface)] px-2 transition";
 }
 
 function getReminderThumbClassName(reminderEnabled: boolean): string {
@@ -229,7 +229,8 @@ export function ExtractionCards({
                 type="button"
                 onClick={onReminderToggle}
                 className={getReminderTrackClassName(reminderEnabled)}
-                aria-pressed={reminderEnabled}
+                role="switch"
+                aria-checked={reminderEnabled}
                 aria-label={reminderEnabled ? "Reminder enabled" : "Reminder disabled"}
               >
                 <span className={getReminderThumbClassName(reminderEnabled)} />

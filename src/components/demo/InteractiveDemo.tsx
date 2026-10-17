@@ -37,6 +37,8 @@ type DemoEngagementPatch = {
   ctaClicked?: string;
 };
 
+const CTA_SCROLL_CLEARANCE_PX = 96;
+
 type ScenarioAudioMap = Partial<Record<DemoScenarioSlug, HTMLAudioElement>>;
 
 type ScenarioTimeline = {
@@ -149,21 +151,7 @@ function createScenarioAudioElement(
   const audioElement = new Audio(scenario.audio.src);
   audioElement.preload = "auto";
   audioElement.muted = !isSoundEnabled;
-  audioElement.load();
   return audioElement;
-}
-
-function createScenarioAudioMap(
-  scenarios: DemoScenario[],
-  isSoundEnabled: boolean,
-): ScenarioAudioMap {
-  const audioMap: ScenarioAudioMap = {};
-
-  for (const scenario of scenarios) {
-    audioMap[scenario.slug] = createScenarioAudioElement(scenario, isSoundEnabled);
-  }
-
-  return audioMap;
 }
 
 function stopAudioElement(audioElement: HTMLAudioElement | null): void {
@@ -252,6 +240,9 @@ export function InteractiveDemo(): JSX.Element {
   const completedScenarioSlugsRef = useRef<Set<DemoScenarioSlug>>(new Set());
   const audioMapRef = useRef<ScenarioAudioMap>({});
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const ctaRef = useRef<HTMLDivElement | null>(null);
+  const scrollOnCompleteRef = useRef(false);
+  const userScrolledRef = useRef(false);
 
   const [phase, setPhase] = useState<DemoPhase>("idle");
   const [selectedSlug, setSelectedSlug] = useState<DemoScenarioSlug | null>(null);
@@ -305,6 +296,7 @@ export function InteractiveDemo(): JSX.Element {
       setReminderEnabled(true);
       setHighlightsReady(true);
       setIsExiting(false);
+      scrollOnCompleteRef.current = false;
     },
     [clearGuidedTap, clearPhaseTimers, stopCurrentAudio],
   );
@@ -359,10 +351,7 @@ export function InteractiveDemo(): JSX.Element {
 
   useEffect(() => {
     sessionIdRef.current = getOrCreateDemoSessionId();
-    const initialSoundEnabled = getStoredSoundEnabled();
-    const audioMap = createScenarioAudioMap(demoScenarios, initialSoundEnabled);
-
-    audioMapRef.current = audioMap;
+    const audioMap = audioMapRef.current;
 
     return () => {
       stopScenarioAudioMap(audioMap);
@@ -401,6 +390,51 @@ export function InteractiveDemo(): JSX.Element {
 
     stopCurrentAudio();
   }, [isMobile, stopCurrentAudio]);
+
+  useEffect(() => {
+    if (!isPlaybackPhase(phase)) {
+      return;
+    }
+
+    function handleUserScroll(): void {
+      userScrolledRef.current = true;
+    }
+
+    const listenerOptions: AddEventListenerOptions = { passive: true };
+    window.addEventListener("touchmove", handleUserScroll, listenerOptions);
+    window.addEventListener("wheel", handleUserScroll, listenerOptions);
+    window.addEventListener("keydown", handleUserScroll, listenerOptions);
+
+    return () => {
+      window.removeEventListener("touchmove", handleUserScroll);
+      window.removeEventListener("wheel", handleUserScroll);
+      window.removeEventListener("keydown", handleUserScroll);
+    };
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "complete") {
+      return;
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      const cta = ctaRef.current;
+      if (!isMobile || !scrollOnCompleteRef.current || userScrolledRef.current || !cta) {
+        return;
+      }
+
+      // Matches scroll-mb-24 on the CTA so the sticky App Store bar never covers it.
+      if (cta.getBoundingClientRect().bottom <= window.innerHeight - CTA_SCROLL_CLEARANCE_PX) {
+        return;
+      }
+
+      const reducedMotionEnabled = getEffectiveReducedMotionPreference(reduceMotion);
+      cta.scrollIntoView({ block: "end", behavior: reducedMotionEnabled ? "auto" : "smooth" });
+      scrollOnCompleteRef.current = false;
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [isMobile, phase, reduceMotion]);
 
   useEffect(() => {
     if (!selectedScenario || phase !== "recording") {
@@ -463,6 +497,8 @@ export function InteractiveDemo(): JSX.Element {
       clearPhaseTimers();
       clearGuidedTap();
       stopCurrentAudio();
+      scrollOnCompleteRef.current = true;
+      userScrolledRef.current = false;
       playScenarioAudio(scenario);
       setSelectedSlug(slug);
       setRecordingElapsedMs(0);
@@ -670,13 +706,13 @@ export function InteractiveDemo(): JSX.Element {
       </div>
 
       {phase === "complete" ? (
-        <div className="flex justify-center">
+        <div ref={ctaRef} className="flex scroll-mb-24 justify-center">
           <a
             href={appStoreLink("site_demo")}
             target="_blank"
             rel="noreferrer"
             onClick={handleAppStoreClick}
-            className="inline-flex min-h-14 items-center justify-center rounded-full bg-[var(--color-primary)] px-8 py-4 text-base font-semibold text-[var(--color-paper)] transition hover:bg-[var(--color-primary-hover)]"
+            className="inline-flex min-h-14 items-center justify-center rounded-full bg-[var(--color-primary)] px-8 py-4 text-base font-semibold text-[var(--color-ink)] transition hover:brightness-110"
           >
             Get Relora on the App Store
           </a>

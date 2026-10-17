@@ -44,7 +44,7 @@ function getBadgeClassName(status: TimelineStatus): string {
     case "complete":
       return "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold bg-[var(--color-secondary)] text-[var(--color-paper)]";
     case "active":
-      return "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold bg-[var(--color-primary)] text-[var(--color-paper)]";
+      return "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold bg-[var(--color-primary)] text-[var(--color-ink)]";
     default:
       return "inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold bg-[var(--color-border-warm)] text-[var(--color-muted)]";
   }

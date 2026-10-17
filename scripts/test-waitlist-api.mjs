@@ -6,11 +6,6 @@ const MODE = process.argv[2] ?? "--all";
 const MAX_IDENTITY_OTHER_LENGTH = 120;
 
 const validPayloadBase = {
-  identity: "Founder or executive",
-  emotionalHook: "Often",
-  goldInsight: "I forgot they were moving cities next month.",
-  featureSignal: ["Smart follow-up reminders", "Search across people"],
-  commitment: "Yes, I want early access",
   company: "",
 };
 
@@ -32,11 +27,13 @@ async function submitPayload(payload) {
     body: JSON.stringify(payload),
   });
 
+  // Read the body once; a non-JSON error page must not crash the script.
+  const text = await response.text();
   let body;
   try {
-    body = await response.json();
+    body = JSON.parse(text);
   } catch {
-    body = { message: await response.text() };
+    body = { message: text.slice(0, 200) };
   }
 
   return { status: response.status, headers: response.headers, body };
@@ -50,7 +47,7 @@ function assert(condition, message) {
 
 async function runBasicFlowTest() {
   const email = makeUniqueEmail("waitlist-basic");
-  console.log(`\n[Basic] Testing created/updated flow with ${email}`);
+  console.log(`\n[Basic] Testing email-only created/updated flow with ${email}`);
 
   const first = await submit(email);
   console.log(`[Basic] First submit -> status ${first.status}, code: ${first.body?.code ?? "n/a"}`);
@@ -63,6 +60,54 @@ async function runBasicFlowTest() {
   assert(second.body?.code === "updated", "Expected second submit code to be 'updated'.");
 
   console.log("[Basic] PASS");
+}
+
+async function runRoleTest() {
+  const email = makeUniqueEmail("waitlist-role");
+  console.log(`\n[Role] Testing email then role with ${email}`);
+
+  const first = await submit(email);
+  console.log(`[Role] Email submit -> status ${first.status}, code: ${first.body?.code ?? "n/a"}`);
+  assert(first.status === 200, "Expected email submit status to be 200.");
+  assert(first.body?.code === "created", "Expected email submit code to be 'created'.");
+
+  const withRole = await submitPayload({
+    ...validPayloadBase,
+    email,
+    identity: "Founder or executive",
+  });
+  console.log(`[Role] Role submit -> status ${withRole.status}, code: ${withRole.body?.code ?? "n/a"}`);
+  assert(withRole.status === 200, "Expected role submit status to be 200.");
+  assert(withRole.body?.code === "updated", "Expected role submit code to be 'updated'.");
+
+  const bogus = await submitPayload({
+    ...validPayloadBase,
+    email,
+    identity: "Bogus",
+  });
+  console.log(`[Role] Bogus role -> status ${bogus.status}`);
+  assert(bogus.status === 400, "Expected unknown identity to return 400.");
+
+  console.log("[Role] PASS");
+}
+
+async function runLegacyPayloadTest() {
+  const email = makeUniqueEmail("waitlist-legacy");
+  console.log(`\n[Legacy] Testing old six-step payload with ${email}`);
+
+  const result = await submitPayload({
+    ...validPayloadBase,
+    email,
+    identity: "Founder or executive",
+    emotionalHook: "Often",
+    goldInsight: "I forgot they were moving cities next month.",
+    featureSignal: ["Smart follow-up reminders", "Search across people"],
+    commitment: "Yes, I want early access",
+  });
+  console.log(`[Legacy] Old payload -> status ${result.status}, code: ${result.body?.code ?? "n/a"}`);
+  assert(result.status === 200, "Expected old payload to still return 200.");
+
+  console.log("[Legacy] PASS");
 }
 
 async function runRateLimitTest() {
@@ -149,12 +194,24 @@ async function main() {
     return;
   }
 
+  if (MODE === "--role") {
+    await runRoleTest();
+    return;
+  }
+
+  if (MODE === "--legacy") {
+    await runLegacyPayloadTest();
+    return;
+  }
+
   if (MODE === "--identity-other") {
     await runIdentityOtherTest();
     return;
   }
 
   await runBasicFlowTest();
+  await runRoleTest();
+  await runLegacyPayloadTest();
   await runIdentityOtherTest();
   await runRateLimitTest();
 }
