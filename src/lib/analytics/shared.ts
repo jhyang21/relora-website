@@ -4,9 +4,6 @@ export type AnalyticsPayload = Record<string, AnalyticsScalar>;
 export const CLIENT_ANALYTICS_EVENTS = [
   "site_nav_clicked",
   "hero_cta_clicked",
-  "waitlist_step_viewed",
-  "waitlist_step_completed",
-  "waitlist_submit_started",
   "demo_scenario_started",
   "demo_replayed",
   "demo_completed",
@@ -15,8 +12,6 @@ export const CLIENT_ANALYTICS_EVENTS = [
 ] as const;
 
 export const SERVER_ANALYTICS_EVENTS = [
-  "waitlist_submit_succeeded",
-  "waitlist_submit_failed",
   "data_request_submit_succeeded",
   "data_request_submit_failed",
   "demo_scenario_started",
